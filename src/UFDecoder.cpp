@@ -87,25 +87,21 @@ void UFDecoder::doDecode(const gf2Vec& syndrome, const std::unique_ptr<ParityChe
 
     // collect all estimates in a set
     auto                  connectedComponents = getConnectedComps(components);
-    std::set<std::size_t> estimates;
+    NodeSet estimates;
     for (const auto& comp : connectedComponents) {
         auto compEstimate = getEstimateForComponent(comp, syndr, pcm);
         estimates.insert(compEstimate.begin(), compEstimate.end());
     }
 
-    // convert to vector
-    NodeVector res(estimates.begin(), estimates.end());
-
     // store result
-    const auto decodingTimeEnd = std::chrono::high_resolution_clock::now();
-    result.decodingTime        = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                  decodingTimeEnd - decodingTimeBegin)
-                                  .count();
+    result.estimNodeIdxVector.assign(estimates.begin(), estimates.end());
     result.estimBoolVector = gf2Vec(getCode()->getN());
-    for (auto re : res) {
+    for (auto re : result.estimNodeIdxVector) {
         result.estimBoolVector.at(re) = true;
     }
-    result.estimNodeIdxVector.assign(res.begin(), res.end());
+    const auto decodingTime = std::chrono::high_resolution_clock::now() - decodingTimeBegin;
+    result.decodingTime        = static_cast<std::size_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(decodingTime).count());
 }
 
 /**
@@ -234,6 +230,7 @@ NodeSet UFDecoder::getEstimateForComponent(const NodeSet&                       
     gf2Vec            redSyndr;
     std::vector<bool> used(pcm->pcm->size());
 
+    // fill up reduced pcm and syndrome
     for (auto node : nodeSet) {
         if (node >= getCode()->getN()) { // is a check node
             auto idx = node - getCode()->getN();
