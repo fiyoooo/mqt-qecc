@@ -6,7 +6,13 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/mqt-core" "extern/mqt-core" EXCLU
 
 # collect source and header files
 file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/include/*.hpp")
-file(GLOB SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB SOURCE_FILES
+        # "${PROJECT_SOURCE_DIR}/src/DecodingSimulator.cpp"
+        "${PROJECT_SOURCE_DIR}/src/LightsOut.cpp"
+        "${PROJECT_SOURCE_DIR}/src/MaxSATDecoder.cpp"
+        "${PROJECT_SOURCE_DIR}/src/UFDecoder.cpp"
+        "${PROJECT_SOURCE_DIR}/src/UFHeuristic.cpp"
+)
 
 # main project library
 add_library(${PROJECT_NAME}_lib
@@ -34,18 +40,10 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC project_options project_warnings)
 
 # add submodules
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC nlohmann_json ldpc)
-
-# add flint package
-find_package(FLINT REQUIRED)
-if (FLINT_FOUND)
-    message(STATUS "Found FLINT: ${FLINT_INCLUDE_DIRS} ${FLINT_LIBRARIES}")
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC ${FLINT_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME}_lib PUBLIC ${FLINT_LIBRARIES})
-else ()
-    message(FATAL_ERROR "FLINT library not found")
-endif ()
-
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC
+        nlohmann_json
+        # ldpc
+)
 
 # add z3 package
 find_package(Z3 REQUIRED)
@@ -56,6 +54,10 @@ if (Z3_FOUND)
 else ()
     message(FATAL_ERROR "Z3 library not found")
 endif ()
+
+# connect necessary files with z3
+add_executable(lights_out LightsOut.cpp)
+target_link_libraries(lights_out ${PROJECT_NAME}_lib ${Z3_LIBRARIES})
 
 # add MQT alias
 add_library(MQT::${PROJECT_NAME}_lib ALIAS ${PROJECT_NAME}_lib)

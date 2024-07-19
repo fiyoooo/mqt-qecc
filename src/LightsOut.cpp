@@ -2,7 +2,7 @@
 // Created by Fiona Froehler on 08.04.24.
 //
 
-#include "../include/LightsOut.hpp"
+#include "LightsOut.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -205,7 +205,7 @@ int main() {
     solver.preconstructZ3Instance();
 
     // solve problem
-    std::vector<bool> syndrome               = {false, false, false, false};
+    std::vector<bool> syndrome               = {false, true, false, false};
     auto [switches, constr_time, solve_time] = solver.solve(syndrome);
 
     // output results
