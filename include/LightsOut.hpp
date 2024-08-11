@@ -10,7 +10,6 @@
 
 class LightsOut {
 public:
-    // TODO check if correct constructor, move or copy?
     LightsOut(const std::unordered_map<int, std::vector<int>>& lightsToSwitches,
               const std::unordered_map<int, std::vector<int>>& switchesToLights);
 
@@ -32,14 +31,13 @@ public:
      * @return A tuple containing the solution switches, time taken for constraint completion, and time taken for solving the problem.
      */
     std::tuple<std::vector<int>, std::chrono::duration<double>, std::chrono::duration<double>> solve(
-            std::vector<bool>& syndrome, const std::string& solverPath = "z3");
+            const std::vector<bool>& syndrome);
 
 private:
     z3::context     ctx_;       // manages memory allocation and other resources of z3 instance
     z3::optimize    optimizer_; // optimizes constraints and solves problem
     z3::expr_vector switch_vars_;
 
-    // TODO vectors or sets? change int to size_t?
     std::unordered_map<int, std::vector<int>> lights_to_switches_;
     std::unordered_map<int, std::vector<int>> switches_to_lights_;
     std::unordered_map<int, z3::expr_vector>  helper_vars_;
@@ -60,7 +58,7 @@ private:
      * Adds the constraint that is dependent on the value of the light.
      *
      * @param light in question
-     * @param switches that toggle the light // TODO put inside function as it is lights_to_switches(light)?
+     * @param switches that toggle the light
      * @param val of the light in the syndrome
      */
     void completeParityConstraint(int light, const std::vector<int>& switches, bool val);
@@ -72,7 +70,7 @@ private:
      * @param lights booleans representing current state of the lights
      * @return true if all lights are switched off after simulating switch presses, false otherwise
      */
-    bool validateModel(const z3::model& model, std::vector<bool>& lights);
+    bool validateModel(const z3::model& model, const std::vector<bool>& lights);
 
     /**
      * @brief Counts the number of switches that are set to true.
@@ -80,5 +78,5 @@ private:
      * @param model to be analyzed
      * @return number of switches that are set to true
      */
-    int countSwitches(const z3::model& model);
+    [[maybe_unused]] int countSwitches(const z3::model& model);
 };

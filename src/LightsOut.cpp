@@ -42,12 +42,10 @@ void LightsOut::preconstructZ3Instance() {
     for (const auto& switchVar : switch_vars_) {
         optimizer_.add_soft(!switchVar, 1); // default weight 1 explicitly needed in cpp
     }
-
-    std::cout << "preconstructed z3\n";
 }
 
 std::tuple<std::vector<int>, std::chrono::duration<double>, std::chrono::duration<double>>
-LightsOut::solve(std::vector<bool>& syndrome, const std::string& solverPath) {
+LightsOut::solve(const std::vector<bool>& syndrome) {
     // push a new context to the optimizer
     optimizer_.push();
 
@@ -62,46 +60,30 @@ LightsOut::solve(std::vector<bool>& syndrome, const std::string& solverPath) {
     std::vector<int>              switches;
     std::chrono::duration<double> solveTime{};
 
-    if (solverPath == "z3") { // TODO erase? what other solver...
-        // solve the problem
-        startTime   = std::chrono::high_resolution_clock::now();
-        auto result = optimizer_.check();
-        solveTime   = std::chrono::high_resolution_clock::now() - startTime;
-        if (result != z3::sat) {
-            throw std::logic_error("No solution found");
-        }
+    // solve the problem
+    startTime   = std::chrono::high_resolution_clock::now();
+    auto result = optimizer_.check();
+    solveTime   = std::chrono::high_resolution_clock::now() - startTime;
+    if (result != z3::sat) {
+        throw std::logic_error("No solution found");
+    }
 
-        // validate the model
-        auto model = optimizer_.get_model();
-        if (!validateModel(model, syndrome)) {
-            throw std::logic_error("Model is invalid");
-        }
+    // validate the model
+    auto model = optimizer_.get_model();
+    if (!validateModel(model, syndrome)) {
+        throw std::logic_error("Model is invalid");
+    }
 
-        // set the switches
-        for (z3::expr const switchVar : switch_vars_) {
-            z3::expr const evalResult = model.eval(switchVar, true);
-            if (evalResult.is_true()) {
-                switches.push_back(1);
-            } else if (evalResult.is_false()) {
-                switches.push_back(0);
-            } else {
-                throw std::logic_error("Expression evaluation result is not boolean");
-            }
+    // set the switches
+    for (z3::expr const switchVar : switch_vars_) {
+        z3::expr const evalResult = model.eval(switchVar, true);
+        if (evalResult.is_true()) {
+            switches.push_back(1);
+        } else if (evalResult.is_false()) {
+            switches.push_back(0);
+        } else {
+            throw std::logic_error("Expression evaluation result is not boolean");
         }
-    } else { // TODO don't know how to actually do this
-        /*
-        // Use external solver specified by solver_path
-        optimizer_.set("pp.wcnf", true);
-        std::stringstream wcnf;
-        wcnf << optimizer_;
-        // Note: This merely calls the solver. It does not interpret the output.
-        //       This is just to measure the time it takes to solve the problem.
-        std::ofstream out("./solver-out_" + solver_path.substr(solver_path.find_last_of("/\\") + 1) + ".txt",
-                          std::ios_base::app);
-        start = std::chrono::high_resolution_clock::now();
-        std::system((solver_path + " " + wcnf.str()).c_str());
-        solve_time = std::chrono::high_resolution_clock::now() - start;
-         */
     }
 
     // pop the context from the optimizer, restores previous state of optimizer
@@ -116,14 +98,12 @@ void LightsOut::preconstructParityConstraint(int light, const std::vector<int>& 
         throw std::logic_error("Switch variables not initialized");
     }
 
-    // TODO check if more efficient when using reference or direct access
     // get helper variables for the given light
     auto& helperVars = helper_vars_.at(light);
 
     // split into smaller constraints
     for (size_t i = 1; i < switches.size() - 1; ++i) {
         // switch_i XOR h_i == h_{i-1}
-        // TODO define constraint outside the loop for more efficiency? But then less memory efficient
         z3::expr const constraint = (switch_vars_[switches[i]] ^ helperVars[i]) == helperVars[i - 1];
         optimizer_.add(constraint.simplify());
     }
@@ -139,7 +119,6 @@ void LightsOut::completeParityConstraint(int light, const std::vector<int>& swit
         throw std::logic_error("Switch variables not initialized");
     }
 
-    // TODO check if more efficient when using reference or direct access
     // get helper variables for the given light
     auto& helperVars = helper_vars_.at(light);
 
@@ -148,27 +127,28 @@ void LightsOut::completeParityConstraint(int light, const std::vector<int>& swit
     optimizer_.add(constraint.simplify());
 }
 
-bool LightsOut::validateModel(const z3::model& model, std::vector<bool>& lights) {
+bool LightsOut::validateModel(const z3::model& model, const std::vector<bool>& lights) {
     // ensure switch variables are initialized
     if (switch_vars_.empty()) {
         throw std::logic_error("Switch variables not initialized");
     }
 
+    std::vector<bool> copy(lights);
     for (size_t i = 0; i < switch_vars_.size(); ++i) {
         // if switch set to true
         if (model.eval(switch_vars_[i], true).is_true()) {
             // flip all lights that are controlled by this switch
-            for (int light : switches_to_lights_[i]) {
-                lights[light] = !lights[light];
+            for (int const light : switches_to_lights_[i]) {
+                copy[light] = !copy[light];
             }
         }
     }
 
     // check if all lights are switched off now
-    return std::all_of(lights.begin(), lights.end(), [](bool light) { return !light; });
+    return std::all_of(copy.begin(), copy.end(), [](bool light) { return !light; });
 }
 
-int LightsOut::countSwitches(const z3::model& model) {
+[[maybe_unused]] int LightsOut::countSwitches(const z3::model& model) {
     // ensure switch variables are initialized
     if (switch_vars_.empty()) {
         throw std::logic_error("Switch variables not initialized");
@@ -184,37 +164,4 @@ int LightsOut::countSwitches(const z3::model& model) {
 
     // this doesn't work because of iterator incompatibility
     // return std::count_if(switch_vars_.begin(), switch_vars_.end(), [&model](const z3::expr &var) { return model.eval(var) == z3::sat; });
-}
-
-int main() {
-    // initialize lights and solver
-    std::unordered_map<int, std::vector<int>> const lightsToSwitches{
-            {0, {0, 1, 2}},
-            {1, {1, 2, 4}},
-            {2, {1, 3, 4}},
-            {3, {2, 4, 5}}};
-
-    std::unordered_map<int, std::vector<int>> const switchesToLights{
-            {0, {0}},
-            {1, {0, 1, 2}},
-            {2, {0, 1, 3}},
-            {3, {2}},
-            {4, {1, 2, 3}},
-            {5, {3}}};
-    LightsOut solver(lightsToSwitches, switchesToLights);
-    solver.preconstructZ3Instance();
-
-    // solve problem
-    std::vector<bool> syndrome               = {false, true, false, false};
-    auto [switches, constr_time, solve_time] = solver.solve(syndrome);
-
-    // output results
-    std::cout << "Switches: ";
-    for (auto& sw : switches) {
-        std::cout << sw << " ";
-    }
-    std::cout << "\nConstruction time: " << constr_time.count() << " seconds\n";
-    std::cout << "Solve time: " << solve_time.count() << " seconds\n";
-
-    return 0;
 }
