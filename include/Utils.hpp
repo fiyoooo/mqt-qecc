@@ -54,7 +54,7 @@ public:
             for (size_t j = 0; j < colCount; ++j) {
                 if (reducedMatrix[i][j] == 1) {
                     allZeros = false;
-                    result[j] = reducedMatrix[i][colCount] % 2;
+                    result[j] = ((reducedMatrix[i][colCount] % 2) != 0);
                     break;
                 }
             }
@@ -95,18 +95,18 @@ public:
             if (lead >= colCount) {
                 return matrix;
             }
-            size_t i = r;
-            while (matrix[i][lead] == 0) {
-                ++i;
-                if (i == rowCount) {
-                    i = r;
+            size_t k = r;
+            while (matrix[k][lead] == 0) {
+                ++k;
+                if (k == rowCount) {
+                    k = r;
                     ++lead;
                     if (lead == colCount) {
                         return matrix;
                     }
                 }
             }
-            std::swap(matrix[i], matrix[r]);
+            std::swap(matrix[k], matrix[r]);
             int lv = matrix[r][lead];
             for (size_t j = 0; j < colCount; ++j) {
                 matrix[r][j] /= lv;
@@ -205,6 +205,14 @@ public:
         if (vector.empty()) {
             throw QeccException("Vector is empty");
         }
+    }
+
+    [[maybe_unused]] static void printGF2matrix(const gf2Mat& matrix) {
+        std::cout << getStringFrom(matrix);
+    }
+
+    static void printGF2vector(const gf2Vec& vector) {
+        std::cout << getStringFrom(vector);
     }
 
     static std::string getStringFrom(const gf2Mat& matrix) {
