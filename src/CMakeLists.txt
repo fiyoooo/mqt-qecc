@@ -59,6 +59,10 @@ endif ()
 add_executable(lights_out LightsOut.cpp)
 target_link_libraries(lights_out ${PROJECT_NAME}_lib ${Z3_LIBRARIES})
 
+# connect necessary files with z3
+add_executable(max_sat MaxSATDecoder.cpp)
+target_link_libraries(max_sat ${PROJECT_NAME}_lib ${Z3_LIBRARIES})
+
 # add MQT alias
 add_library(MQT::${PROJECT_NAME}_lib ALIAS ${PROJECT_NAME}_lib)
 
