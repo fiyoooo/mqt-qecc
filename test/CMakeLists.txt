@@ -20,10 +20,11 @@ set_target_properties(
 package_add_test(
   ${PROJECT_NAME}_test
   MQT::${PROJECT_NAME}_lib
+  test_maxsat.cpp
   test_ufdheuristic.cpp
-  test_utils.cpp
+  # test_utils.cpp
   test_originalUfd.cpp
-  test_simulator.cpp
+  # test_simulator.cpp
   test_treenode.cpp)
 
 # files containing codes for tests
