@@ -7,6 +7,7 @@
 #include "Decoder.hpp"
 
 #include <chrono>
+#include <gf2dense.hpp>
 #include <queue>
 #include <random>
 #include <set>
@@ -33,10 +34,10 @@ void UFDecoder::decode(const gf2Vec& syndrome) {
 
         // combine
         this->result.decodingTime += xres.decodingTime;
-        this->result.estimBoolVector.insert(this->result.estimBoolVector.end(),
-                                            xres.estimBoolVector.begin(), xres.estimBoolVector.end());
-        this->result.estimNodeIdxVector.insert(this->result.estimNodeIdxVector.end(),
-                                               xres.estimNodeIdxVector.begin(), xres.estimNodeIdxVector.end());
+        std::move(xres.estimBoolVector.begin(), xres.estimBoolVector.end(),
+                  std::back_inserter(this->result.estimBoolVector));
+        std::move(xres.estimNodeIdxVector.begin(), xres.estimNodeIdxVector.end(),
+                  std::back_inserter(this->result.estimNodeIdxVector));
     } else {
         doDecode(syndrome, this->getCode()->gethZ());
     }
@@ -86,22 +87,24 @@ void UFDecoder::doDecode(const gf2Vec& syndrome, const std::unique_ptr<ParityChe
     }
 
     // collect all estimates in a set
-    auto                  connectedComponents = getConnectedComps(components);
+    auto    connectedComponents = getConnectedComps(components);
     NodeSet estimates;
     for (const auto& comp : connectedComponents) {
         auto compEstimate = getEstimateForComponent(comp, syndr, pcm);
         estimates.insert(compEstimate.begin(), compEstimate.end());
     }
 
+    const auto decodingTimeEnd = std::chrono::high_resolution_clock::now();
+    result.decodingTime        = static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                           decodingTimeEnd - decodingTimeBegin)
+                                                           .count());
+
     // store result
-    result.estimNodeIdxVector.assign(estimates.begin(), estimates.end());
     result.estimBoolVector = gf2Vec(getCode()->getN());
-    for (auto re : result.estimNodeIdxVector) {
+    for (auto re : estimates) {
         result.estimBoolVector.at(re) = true;
     }
-    const auto decodingTime = std::chrono::high_resolution_clock::now() - decodingTimeBegin;
-    result.decodingTime        = static_cast<std::size_t>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(decodingTime).count());
+    result.estimNodeIdxVector.assign(estimates.begin(), estimates.end());
 }
 
 /**
@@ -253,12 +256,21 @@ NodeSet UFDecoder::getEstimateForComponent(const NodeSet&                       
             }
         }
     }
+    auto                 redHzCsc = Utils::toCsc(redHz);
+    std::vector<uint8_t> redSyndInt(redSyndr.size());
+    for (std::size_t i = 0; i < redSyndr.size(); i++) {
+        redSyndInt.at(i) = redSyndr.at(i) ? 1 : 0;
+    }
+    auto pluDec = ldpc::gf2dense::PluDecomposition(static_cast<int>(redHz.size()), static_cast<int>(redHz.at(0).size()),
+                                                   redHzCsc);
+    pluDec.rref();
 
-    // solve the system redHz*x = redSyndr by x to see if a solution can be found
-    gf2Vec solution = Utils::solveSystem(redHz, redSyndr);
-    for (std::size_t i = 0; i < solution.size(); i++) {
-        if (solution.at(i)) {
-            res.insert(i);
+    auto estim = pluDec.lu_solve(
+            redSyndInt); // solves the system redHz*x=redSyndr by x to see if a solution can be found
+    for (std::size_t i = 0; i < estim.size(); i++) {
+        if (estim.at(i) != 0U) {
+            auto inst = res.insert(static_cast<size_t>(i));
+            std::cout << inst.second;
         }
     }
     return res;

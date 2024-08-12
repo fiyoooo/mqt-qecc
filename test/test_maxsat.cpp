@@ -139,33 +139,44 @@ TEST_P(MaxSATLightsOutComparison, ComparingWithLightsOut) {
  */
 TEST_P(UniquelyCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     auto          code = SteaneXCode();
-    MaxSATDecoder decoder(code);
-    std::cout << "code: " << std::endl
-              << code << std::endl;
-    const std::vector<bool> err = GetParam();
+    std::cout << "code: " << '\n'
+              << code << '\n';
 
+    const std::vector<bool> err = GetParam();
     auto syndr = code.getXSyndrome(err);
     std::cout << "syndrome: ";
     Utils::printGF2vector(syndr);
+    std::cout << '\n';
+
+    MaxSATDecoder decoder(code);
+    decoder.preconstructZ3Instance();
     decoder.decode(syndr);
+
     const auto& decodingResult = decoder.result;
     const auto& estim          = decodingResult.estimBoolVector;
     const auto& estimIdx       = decodingResult.estimNodeIdxVector;
+
     gf2Vec      estim2(err.size());
     std::cout << "estiIdxs: ";
     for (auto idx : estimIdx) {
         estim2.at(idx) = true;
         std::cout << idx;
     }
-    std::cout << std::endl;
-    const gf2Vec sol = GetParam();
+    std::cout << '\n';
 
-    std::cout << "Estim: " << std::endl;
+    std::cout << "Estim: ";
     Utils::printGF2vector(estim);
-    std::cout << "EstimIdx: " << std::endl;
+    std::cout << '\n';
+
+    std::cout << "EstimIdx: ";
     Utils::printGF2vector(estim2);
-    std::cout << "Sol: " << std::endl;
+    std::cout << '\n';
+
+    const gf2Vec sol = GetParam();
+    std::cout << "Sol: ";
     Utils::printGF2vector(sol);
+    std::cout << "\n\n";
+
     EXPECT_TRUE(sol == estim);
     EXPECT_TRUE(sol == estim2);
 }
