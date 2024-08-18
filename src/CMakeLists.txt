@@ -12,13 +12,15 @@ add_library(
         ${MQT_QECC_INCLUDE_BUILD_DIR}/TreeNode.hpp
         ${MQT_QECC_INCLUDE_BUILD_DIR}/UFDecoder.hpp
         ${MQT_QECC_INCLUDE_BUILD_DIR}/UFHeuristic.hpp
+        ${MQT_QECC_INCLUDE_BUILD_DIR}/union_find.hpp
         ${MQT_QECC_INCLUDE_BUILD_DIR}/Utils.hpp
         DecodingSimulator.cpp
         LightsOut.cpp
         MaxSATDecoder.cpp
         UFDecoder.cpp
         UFHeuristic.cpp
-        Utils.cpp)
+        Utils.cpp
+        union_find.cpp)
 
 # set include directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${MQT_QECC_INCLUDE_BUILD_DIR})
