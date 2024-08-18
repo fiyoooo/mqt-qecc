@@ -4,6 +4,7 @@ package_add_test_with_working_dir(
         ${CMAKE_CURRENT_BINARY_DIR}
         test_maxsat.cpp
         test_ufdheuristic.cpp
+        test_ufdmaxsat.cpp
         test_utils.cpp
         test_originalUfd.cpp
         test_simulator.cpp
