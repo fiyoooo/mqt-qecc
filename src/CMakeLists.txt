@@ -19,8 +19,7 @@ add_library(
         MaxSATDecoder.cpp
         UFDecoder.cpp
         UFHeuristic.cpp
-        Utils.cpp
-        union_find.cpp)
+        Utils.cpp)
 
 # set include directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${MQT_QECC_INCLUDE_BUILD_DIR})
