@@ -10,6 +10,7 @@ from ldpc import mod2
 from qiskit.quantum_info import Clifford
 
 from mqt.qecc import CSSCode
+from mqt.qecc.codes import SquareOctagonColorCode
 from mqt.qecc.ft_stateprep import (
     depth_optimal_prep_circuit,
     gate_optimal_prep_circuit,
@@ -34,6 +35,18 @@ def steane_code() -> CSSCode:
 
 
 @pytest.fixture
+def css_4_2_2_code() -> CSSCode:
+    """Return the 4,2,2  code."""
+    return CSSCode(2, np.array([[1] * 4]), np.array([[1] * 4]))
+
+
+@pytest.fixture
+def css_6_2_2_code() -> CSSCode:
+    """Return the 4,2,2  code."""
+    return CSSCode(2, np.array([[1] * 6]), np.array([[1] * 6]))
+
+
+@pytest.fixture
 def surface_code() -> CSSCode:
     """Return the distance 3 rotated Surface Code."""
     return CSSCode.from_code_name("surface", 3)
@@ -48,7 +61,7 @@ def tetrahedral_code() -> CSSCode:
 @pytest.fixture
 def cc_4_8_8_code() -> CSSCode:
     """Return the d=5 4,8,8 color code."""
-    return CSSCode.from_code_name("cc_4_8_8")
+    return SquareOctagonColorCode(5)
 
 
 @pytest.fixture
@@ -95,10 +108,12 @@ def get_stabs(qc: QuantumCircuit) -> tuple[npt.NDArray[np.int_], npt.NDArray[np.
     return x, z
 
 
-@pytest.mark.parametrize("code_name", ["steane", "tetrahedral", "surface", "cc_4_8_8"])
-def test_heuristic_prep_consistent(code_name: str) -> None:
+@pytest.mark.parametrize(
+    "code", ["steane_code", "css_4_2_2_code", "css_6_2_2_code", "tetrahedral_code", "surface_code"]
+)
+def test_heuristic_prep_consistent(code: CSSCode, request) -> None:  # type: ignore[no-untyped-def]
     """Check that heuristic_prep_circuit returns a valid circuit with the correct stabilizers."""
-    code = CSSCode.from_code_name(code_name)
+    code = request.getfixturevalue(code)
 
     sp_circ = heuristic_prep_circuit(code)
     circ = sp_circ.circ
@@ -112,11 +127,11 @@ def test_heuristic_prep_consistent(code_name: str) -> None:
     assert eq_span(np.vstack((code.Hz, code.Lz)), z)  # type: ignore[arg-type]
 
 
-@pytest.mark.parametrize("code", ["steane_code", "surface_code"])
+@pytest.mark.parametrize("code", ["steane_code", "css_4_2_2_code", "css_6_2_2_code"])
 def test_gate_optimal_prep_consistent(code: CSSCode, request) -> None:  # type: ignore[no-untyped-def]
     """Check that gate_optimal_prep_circuit returns a valid circuit with the correct stabilizers."""
     code = request.getfixturevalue(code)
-    sp_circ = gate_optimal_prep_circuit(code, max_timeout=6)
+    sp_circ = gate_optimal_prep_circuit(code, max_timeout=3)
     assert sp_circ is not None
     assert sp_circ.zero_state
 
@@ -131,12 +146,12 @@ def test_gate_optimal_prep_consistent(code: CSSCode, request) -> None:  # type: 
     assert eq_span(np.vstack((code.Hz, code.Lz)), z)  # type: ignore[arg-type]
 
 
-@pytest.mark.parametrize("code", ["steane_code", "surface_code"])
+@pytest.mark.parametrize("code", ["steane_code", "css_4_2_2_code", "css_6_2_2_code"])
 def test_depth_optimal_prep_consistent(code: CSSCode, request) -> None:  # type: ignore[no-untyped-def]
     """Check that depth_optimal_prep_circuit returns a valid circuit with the correct stabilizers."""
     code = request.getfixturevalue(code)
 
-    sp_circ = depth_optimal_prep_circuit(code, max_timeout=6)
+    sp_circ = depth_optimal_prep_circuit(code, max_timeout=3)
     assert sp_circ is not None
     circ = sp_circ.circ
     max_cnots = np.sum(code.Hx) + np.sum(code.Hz)  # type: ignore[arg-type]
@@ -149,11 +164,11 @@ def test_depth_optimal_prep_consistent(code: CSSCode, request) -> None:  # type:
     assert eq_span(np.vstack((code.Hz, code.Lz)), z)  # type: ignore[arg-type]
 
 
-@pytest.mark.parametrize("code", ["steane_code", "surface_code"])
+@pytest.mark.parametrize("code", ["steane_code", "css_4_2_2_code", "css_6_2_2_code"])
 def test_plus_state_gate_optimal(code: CSSCode, request) -> None:  # type: ignore[no-untyped-def]
     """Test synthesis of the plus state."""
     code = request.getfixturevalue(code)
-    sp_circ_plus = gate_optimal_prep_circuit(code, max_timeout=5, zero_state=False)
+    sp_circ_plus = gate_optimal_prep_circuit(code, max_timeout=3, zero_state=False)
 
     assert sp_circ_plus is not None
     assert not sp_circ_plus.zero_state
@@ -183,7 +198,9 @@ def test_plus_state_gate_optimal(code: CSSCode, request) -> None:  # type: ignor
         assert not np.array_equal(z, x_zero)
 
 
-@pytest.mark.parametrize("code", ["steane_code", "surface_code", "tetrahedral_code"])
+@pytest.mark.parametrize(
+    "code", ["steane_code", "css_4_2_2_code", "css_6_2_2_code", "surface_code", "tetrahedral_code"]
+)
 def test_plus_state_heuristic(code: CSSCode, request) -> None:  # type: ignore[no-untyped-def]
     """Test synthesis of the plus state."""
     code = request.getfixturevalue(code)
@@ -425,3 +442,21 @@ def test_full_ft_heuristic_cc5(color_code_d5_sp: StatePrepCircuit) -> None:
     circ_ver_x_ft = heuristic_verification_circuit(circ, full_fault_tolerance=False)
     assert circ_ver_full_ft.num_nonlocal_gates() > circ_ver_x_ft.num_nonlocal_gates()
     assert circ_ver_full_ft.depth() > circ_ver_x_ft.depth()
+
+
+def test_error_detection_code() -> None:
+    """Test that different circuits are obtained when using an error detection code."""
+    code = CSSCode.from_code_name("carbon")
+    circ = heuristic_prep_circuit(code)
+
+    circ_ver_correction = gate_optimal_verification_circuit(
+        circ, max_ancillas=3, max_timeout=5, full_fault_tolerance=False
+    )
+
+    circ.set_error_detection(True)
+    circ_ver_detection = gate_optimal_verification_circuit(
+        circ, max_ancillas=3, max_timeout=5, full_fault_tolerance=False
+    )
+
+    assert circ_ver_detection.num_qubits > circ_ver_correction.num_qubits
+    assert circ_ver_detection.num_nonlocal_gates() > circ_ver_correction.num_nonlocal_gates()
