@@ -38,11 +38,11 @@ INSTANTIATE_TEST_SUITE_P(CorrectableSingleBitErrsSteane, UniquelyCorrectableErrT
                                  std::vector<uint8_t>{0, 0, 1, 0, 0, 0, 0},
                                  std::vector<uint8_t>{0, 0, 0, 1, 0, 0, 0},
                                  std::vector<uint8_t>{0, 0, 0, 0, 1, 0, 0},
-                                 std::vector<uint8_t>{0, 0, 0, 0, 0, 1, 0}));
+                                 std::vector<uint8_t>{0, 0, 0, 0, 0, 1, 0},
+                                 std::vector<uint8_t>{0, 0, 0, 0, 0, 0, 1}));
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestUFDMaxSAT,
                          testing::Values(
-                                 std::vector<uint8_t>{0, 0, 0, 0, 0, 0, 1},
                                  std::vector<uint8_t>{0, 1, 0, 0, 0, 0, 1},
                                  std::vector<uint8_t>{0, 0, 1, 0, 1, 0, 0},
                                  std::vector<uint8_t>{0, 0, 1, 1, 0, 0, 0},
@@ -51,7 +51,6 @@ INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestUFDMaxSAT,
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, UpToStabCorrectableErrTestUFDMaxSAT,
                          testing::Values(
-                                 std::vector<uint8_t>{0, 0, 0, 0, 0, 0, 1},
                                  std::vector<uint8_t>{1, 0, 1, 0, 0, 0, 0}));
 
 void printPcm(ldpc::bp::BpSparse& pcm) {
@@ -107,7 +106,7 @@ TEST_P(UFDComparison, ComparingWithOriginalUfd) {
 
     // initialize UfDecoder of ldpc
     ldpc::uf::UfDecoder         ufDecoderLdpc(pcm);
-    const std::vector<uint8_t>& estim2Int = ufDecoderLdpc.matrix_decode(syndrInt);
+    const std::vector<uint8_t>& estim2Int = ufDecoderLdpc.maxsat_decode(syndrInt);
     gf2Vec                      estim2;
     for (auto i : estim2Int) {
         estim2.push_back(static_cast<bool>(i));
@@ -144,7 +143,7 @@ TEST_P(UniquelyCorrectableErrTestUFDMaxSAT, SteaneCodeDecodingTestEstim) {
     std::cout << '\n';
 
     auto ufd   = UfDecoder(pcm);
-    auto estim = ufd.matrix_decode(syndr);
+    auto estim = ufd.maxsat_decode(syndr);
 
     std::cout << "Estim: ";
     for (const auto& i : estim) {
@@ -180,7 +179,7 @@ TEST_P(InCorrectableErrTestUFDMaxSAT, SteaneCodeDecodingTestEstim) {
     std::cout << '\n';
 
     auto ufd   = UfDecoder(pcm);
-    auto estim = ufd.matrix_decode(syndr);
+    auto estim = ufd.maxsat_decode(syndr);
 
     std::cout << "Estim: ";
     for (const auto& i : estim) {
@@ -216,7 +215,7 @@ TEST_P(UpToStabCorrectableErrTestUFDMaxSAT, SteaneCodeDecodingTest) {
     std::cout << '\n';
 
     auto ufd   = UfDecoder(pcm);
-    auto estim = ufd.matrix_decode(syndr);
+    auto estim = ufd.maxsat_decode(syndr);
 
     std::cout << "Estim: ";
     for (const auto& i : estim) {

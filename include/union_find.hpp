@@ -400,7 +400,7 @@ struct Cluster {
 
     std::vector<int> maxsat_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights) {
         auto   temp = this->convert_to_matrix(bit_weights);
-        gf2Mat cluster_pcm;
+        gf2Mat cluster_pcm(temp.m, gf2Vec(temp.n, false));
         for (int i = 0; i < temp.m; ++i) {
             for (const auto& entry : temp.iterate_row(i)) {
                 cluster_pcm[i][entry.col_index] = true;
