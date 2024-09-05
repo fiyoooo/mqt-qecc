@@ -3,10 +3,16 @@
 //
 #pragma once
 
+#include "Code.hpp"
 #include "Decoder.hpp"
 
-using NodeSet    = std::unordered_set<std::size_t>; // TODO can also change name
-using NodeVector = std::vector<std::size_t>;        // TODO can also change name
+#include <cstddef>
+#include <memory>
+#include <unordered_set>
+#include <vector>
+
+using NodeSet    = std::unordered_set<std::size_t>;
+using NodeVector = std::vector<std::size_t>;
 
 class UFDecoder : public Decoder {
 public:
