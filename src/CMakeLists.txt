@@ -19,6 +19,7 @@ add_library(
         MaxSATDecoder.cpp
         UFDecoder.cpp
         UFHeuristic.cpp
+        union_find.cpp
         Utils.cpp)
 
 # set include directories
