@@ -14,7 +14,6 @@
 #include <random>
 #include <set>
 #include <stdexcept>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -229,10 +228,8 @@ NodeVector UFDecoder::computeInteriorBitNodes(const NodeSet& nodeSet) const {
 NodeSet UFDecoder::getEstimateForComponent(const NodeSet&                            nodeSet,
                                            const NodeSet&                            syndrome,
                                            const std::unique_ptr<ParityCheckMatrix>& pcm) const {
-    NodeSet                   res{};
-    std::vector<size_t> const intNodes = computeInteriorBitNodes(nodeSet);
-    if (intNodes.empty()) {
-        return NodeSet{};
+    if (computeInteriorBitNodes(nodeSet).empty()) {
+        return {};
     }
 
     gf2Mat            redHz;
@@ -269,6 +266,8 @@ NodeSet UFDecoder::getEstimateForComponent(const NodeSet&                       
     }
     auto pluDec = PluDecomposition(redHz.size(), redHz.at(0).size(), redHzCsc);
     auto estim  = pluDec.luSolve(redSyndInt); // solves the system redHz*x=redSyndr by x to see if a solution can be found
+
+    NodeSet res{};
     for (std::size_t i = 0; i < estim.size(); i++) {
         if (estim.at(i) != 0U) {
             res.emplace(i);

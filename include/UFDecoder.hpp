@@ -8,10 +8,10 @@
 
 #include <cstddef>
 #include <memory>
-#include <unordered_set>
+#include <set>
 #include <vector>
 
-using NodeSet    = std::unordered_set<std::size_t>;
+using NodeSet    = std::set<std::size_t>;
 using NodeVector = std::vector<std::size_t>;
 
 class UFDecoder : public Decoder {
