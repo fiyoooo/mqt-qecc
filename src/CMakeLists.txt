@@ -1,25 +1,32 @@
 # collect project headers
 file(GLOB MQT_QECC_HEADERS CONFIGURE_DEPENDS ${MQT_QECC_INCLUDE_BUILD_DIR}/*.hpp)
+file(GLOB LDPC_HEADERS CONFIGURE_DEPENDS ${MQT_QECC_INCLUDE_BUILD_DIR}/ldpc/*.hpp)
 
 # main project library
 add_library(
         ${PROJECT_NAME}
         ${MQT_QECC_HEADERS}
+        ${LDPC_HEADERS}
+        ldpc/gf2sparse_linalg.cpp
         DecodingSimulator.cpp
+        GF2.cpp
+        LightsOut.cpp
+        MaxSATDecoder.cpp
         UFDecoder.cpp
         UFHeuristic.cpp
         union_find.cpp
         Utils.cpp
-        GF2.cpp)
+)
 
 # set include directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${MQT_QECC_INCLUDE_BUILD_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${MQT_QECC_INCLUDE_BUILD_DIR}/ldpc/robin_map)
 
-# add options and warnings
+# add options and warnings to the library
 target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE MQT::ProjectWarnings MQT::ProjectOptions
-        PUBLIC nlohmann_json::nlohmann_json ldpc)
+        PUBLIC nlohmann_json::nlohmann_json)
 
 # add z3 package
 find_package(Z3 REQUIRED)
@@ -38,12 +45,6 @@ target_link_libraries(lights_out ${PROJECT_NAME} ${Z3_LIBRARIES})
 # connect necessary files with z3
 add_executable(max_sat MaxSATDecoder.cpp)
 target_link_libraries(max_sat ${PROJECT_NAME} ${Z3_LIBRARIES})
-
-# add options and warnings to the library
-target_link_libraries(
-        ${PROJECT_NAME}
-        PRIVATE MQT::ProjectWarnings MQT::ProjectOptions
-        PUBLIC nlohmann_json::nlohmann_json)
 
 # add MQT alias
 add_library(MQT::QECC ALIAS ${PROJECT_NAME})

@@ -2,9 +2,9 @@
 
 #include "Code.hpp"
 #include "MaxSATDecoder.hpp"
-#include "bp.hpp"
-#include "gf2sparse_linalg.hpp"
-#include "sparse_matrix_util.hpp"
+#include "ldpc/bp.hpp"
+#include "ldpc/gf2sparse_linalg.hpp"
+#include "ldpc/sparse_matrix_util.hpp"
 
 #include <robin_map.h>
 #include <robin_set.h>
