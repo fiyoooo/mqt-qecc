@@ -4,6 +4,7 @@
 // to keep 0/1 in boolean areas without clang-tidy warnings:
 // NOLINTBEGIN(readability-implicit-bool-conversion,modernize-use-bool-literals)
 
+#include "Codes.hpp"
 #include "LightsOut.hpp"
 #include "MaxSATDecoder.hpp"
 
@@ -62,7 +63,8 @@ INSTANTIATE_TEST_SUITE_P(CorrectableSingleBitErrsSteane, UniquelyCorrectableErrT
                                  gf2Vec{0, 0, 1, 0, 0, 0, 0},
                                  gf2Vec{0, 0, 0, 1, 0, 0, 0},
                                  gf2Vec{0, 0, 0, 0, 1, 0, 0},
-                                 gf2Vec{0, 0, 0, 0, 0, 1, 0}));
+                                 gf2Vec{0, 0, 0, 0, 0, 1, 0},
+                                 gf2Vec{0, 0, 0, 0, 0, 0, 1}));
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestMaxSAT,
                          testing::Values(
@@ -74,7 +76,7 @@ INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestMaxSAT,
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, UpToStabCorrectableErrTestMaxSAT,
                          testing::Values(
-                                 gf2Vec{0, 0, 0, 0, 0, 0, 1},
+                                 gf2Vec{0, 0, 0, 1, 1, 0, 1},
                                  gf2Vec{1, 1, 1, 0, 0, 0, 0},
                                  gf2Vec{1, 1, 0, 0, 1, 1, 0},
                                  gf2Vec{1, 1, 1, 0, 0, 0, 1}));
@@ -117,7 +119,7 @@ TEST_P(MaxSATLightsOutComparison, ComparingWithLightsOut) {
     MaxSATDecoder maxSATSolver(code);
     maxSATSolver.preconstructZ3Instance();
     maxSATSolver.decode(syndrome);
-    gf2Vec      boolVector = maxSATSolver.result.estimBoolVector;
+    gf2Vec                 boolVector = maxSATSolver.result.estimBoolVector;
     std::vector<int> const switchesMs(boolVector.begin(), boolVector.end());
 
     // compare results
@@ -143,12 +145,12 @@ TEST_P(MaxSATLightsOutComparison, ComparingWithLightsOut) {
  */
 TEST_P(UniquelyCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     auto code = SteaneXCode();
-    std::cout << "code: " << '\n'
+    std::cout << "Code: " << '\n'
               << code << '\n';
 
     const gf2Vec err   = GetParam();
-    auto                    syndr = code.getXSyndrome(err);
-    std::cout << "syndrome: ";
+    auto         syndr = code.getXSyndrome(err);
+    std::cout << "Syndrome: ";
     Utils::printGF2vector(syndr);
     std::cout << '\n';
 
@@ -161,7 +163,7 @@ TEST_P(UniquelyCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     const auto& estimIdx       = decodingResult.estimNodeIdxVector;
 
     gf2Vec estim2(err.size());
-    std::cout << "estiIdxs: ";
+    std::cout << "EstimIdxs: ";
     for (auto idx : estimIdx) {
         estim2.at(idx) = true;
         std::cout << idx;
@@ -172,7 +174,7 @@ TEST_P(UniquelyCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     Utils::printGF2vector(estim);
     std::cout << '\n';
 
-    std::cout << "EstimIdx: ";
+    std::cout << "Estim2: ";
     Utils::printGF2vector(estim2);
     std::cout << '\n';
 
@@ -190,12 +192,12 @@ TEST_P(UniquelyCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
  */
 TEST_P(InCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     auto code = SteaneXCode();
-    std::cout << "code: " << '\n'
+    std::cout << "Code: " << '\n'
               << code << '\n';
 
     const gf2Vec err   = GetParam();
-    auto                    syndr = code.getXSyndrome(err);
-    std::cout << "syndrome: ";
+    auto         syndr = code.getXSyndrome(err);
+    std::cout << "Syndrome: ";
     Utils::printGF2vector(syndr);
     std::cout << '\n';
 
@@ -208,7 +210,7 @@ TEST_P(InCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     const auto& estimIdx       = decodingResult.estimNodeIdxVector;
 
     gf2Vec estim2(err.size());
-    std::cout << "estiIdxs: ";
+    std::cout << "EstimIdxs: ";
     for (auto idx : estimIdx) {
         estim2.at(idx) = true;
         std::cout << idx;
@@ -224,7 +226,7 @@ TEST_P(InCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
     Utils::printGF2vector(estim);
     std::cout << '\n';
 
-    std::cout << "EstimIdx: ";
+    std::cout << "Estim2: ";
     Utils::printGF2vector(estim2);
     std::cout << '\n';
 
@@ -242,12 +244,12 @@ TEST_P(InCorrectableErrTestMaxSAT, SteaneCodeDecodingTestEstim) {
  */
 TEST_P(UpToStabCorrectableErrTestMaxSAT, SteaneCodeDecodingTest) {
     auto code = SteaneCode();
-    std::cout << "code: " << '\n'
+    std::cout << "Code: " << '\n'
               << code << '\n';
 
     const gf2Vec err   = GetParam();
     auto                    syndr = code.getXSyndrome(err);
-    std::cout << "syndrome: ";
+    std::cout << "Syndrome: ";
     Utils::printGF2vector(syndr);
     std::cout << '\n';
 
@@ -260,7 +262,7 @@ TEST_P(UpToStabCorrectableErrTestMaxSAT, SteaneCodeDecodingTest) {
     const auto& estimIdx       = decodingResult.estimNodeIdxVector;
 
     gf2Vec estim2(err.size());
-    std::cout << "estiIdxs: ";
+    std::cout << "EstimIdxs: ";
     for (auto idx : estimIdx) {
         estim2.at(idx) = true;
         std::cout << idx;
@@ -268,20 +270,22 @@ TEST_P(UpToStabCorrectableErrTestMaxSAT, SteaneCodeDecodingTest) {
     std::cout << '\n';
 
     gf2Vec residualErr(err.size());
-    std::cout << "residualErr: ";
+    std::cout << "ResidualErr: ";
     for (size_t i = 0; i < err.size(); i++) {
         residualErr.at(i) = (err[i] != estim[i]);
         std::cout << residualErr.at(i);
     }
     std::cout << '\n';
     gf2Vec residualErr2(err.size());
-    std::cout << "residualErr2: ";
+    std::cout << "ResidualErr2: ";
     for (size_t i = 0; i < err.size(); i++) {
         residualErr2.at(i) = (err[i] != estim2[i]);
         std::cout << residualErr2.at(i);
     }
     std::cout << "\n\n";
 
+    EXPECT_FALSE(err == estim);
+    EXPECT_FALSE(err == estim2);
     EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethX()->pcm, residualErr));
     EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethX()->pcm, residualErr2));
 }

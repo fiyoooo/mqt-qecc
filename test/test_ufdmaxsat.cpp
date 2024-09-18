@@ -6,7 +6,7 @@
 
 #include "Codes.hpp"
 #include "UFDecoder.hpp"
-#include "gf2codes.hpp"
+#include "ldpc/gf2codes.hpp"
 #include "union_find.hpp"
 
 #include <gtest/gtest.h>
