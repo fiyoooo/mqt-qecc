@@ -2,6 +2,7 @@ package_add_test_with_working_dir(
         mqt-qecc-test
         MQT::QECC
         ${CMAKE_CURRENT_BINARY_DIR}
+        test_decoder_comparison.cpp
         test_maxsat.cpp
         test_ufdheuristic.cpp
         test_ufdmaxsat.cpp
