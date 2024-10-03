@@ -303,8 +303,9 @@ public:
             }
             res.at(i) = row;
         }
+        os << Utils::getStringFrom(res);
         if (c.gethX()) {
-            os << Utils::getStringFrom(res) << "hX:\n";
+            os << "hX:\n";
             for (size_t i = 0; i < dim; i++) {
                 gf2Vec row(dim);
                 if (i < dim - nrChecks) {
@@ -318,6 +319,7 @@ public:
                 }
                 res.at(i) = row;
             }
+            os << Utils::getStringFrom(res);
         }
         return os;
     }
