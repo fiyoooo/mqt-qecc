@@ -25,35 +25,6 @@ INSTANTIATE_TEST_SUITE_P(SingleBitErrs, DecoderComparison,
                                  gf2Vec{0, 0, 0, 0, 0, 1, 0},
                                  gf2Vec{0, 0, 0, 0, 0, 0, 1}));
 
-ldpc::bp::BpSparse transformToPcm(Code& code) {
-    ldpc::bp::BpSparse pcm(code.getK(), code.getN());
-    for (int i = 0; i < pcm.m; ++i) {
-        gf2Vec const row = code.gethZ()->pcm->operator[](i);
-        for (int j = 0; j < row.size(); ++j) {
-            if (row[j]) {
-                pcm.insert_entry(i, j);
-            }
-        }
-    }
-    return pcm;
-}
-
-std::vector<uint8_t> transformToInt(const gf2Vec& syndrome) {
-    std::vector<uint8_t> result;
-    for (bool i : syndrome) {
-        result.push_back(static_cast<uint8_t>(i));
-    }
-    return result;
-}
-
-gf2Vec transformToGf2(const std::vector<uint8_t>& syndrome) {
-    gf2Vec result;
-    for (auto i : syndrome) {
-        result.push_back(static_cast<bool>(i));
-    }
-    return result;
-}
-
 gf2Vec runUFDecoder(Code& code, const gf2Vec& syndrome) {
     UFDecoder ufDecoder(code);
     ufDecoder.decode(syndrome);
@@ -91,7 +62,61 @@ std::tuple<double, ReturnType> measureRuntime(Func func) {
     return std::make_tuple(duration.count(), estim);
 }
 
-TEST_P(DecoderComparison, SingleBitErrs) {
+void testAllDecoders(Code& code, const gf2Vec& err, const gf2Vec& syndr, bool peel) {
+    std::cout << "Sol: ";
+    Utils::printGF2vector(err);
+
+    auto [runtimeUFD, estimUFD] = measureRuntime([&]() { return runUFDecoder(code, syndr); });
+    std::cout << "\nEstimUFD: ";
+    Utils::printGF2vector(estimUFD);
+
+    auto [runtimeMS, estimMS] = measureRuntime([&]() { return runMaxSatDecoder(code, syndr); });
+    std::cout << "\nEstimMS: ";
+    Utils::printGF2vector(estimMS);
+
+    // transform pcm and syndrome to right format
+    ldpc::bp::BpSparse         pcm      = Utils::toBpSparse(code);
+    std::vector<uint8_t> const syndrInt = Utils::toUint8(syndr);
+
+    gf2Vec estimUfdPeel;
+    double runtimeUfdPeel = 0;
+    if (peel) {
+        auto [runtimeUfdPeel, estimUfdPeelInt] = measureRuntime([&]() { return runUfdPeelDecoder(pcm, syndrInt); });
+        estimUfdPeel                           = Utils::toGf2Vec(estimUfdPeelInt);
+        std::cout << "\nEstimUfdPeel: ";
+        Utils::printGF2vector(estimUfdPeel);
+    }
+
+    auto [runtimeUfdMatrix, estimUfdMatrixInt] = measureRuntime([&]() { return runUfdMatrixDecoder(pcm, syndrInt); });
+    gf2Vec estimUfdMatrix                      = Utils::toGf2Vec(estimUfdMatrixInt);
+    std::cout << "\nEstimUfdMatrix: ";
+    Utils::printGF2vector(estimUfdMatrix);
+
+    auto [runtimeUfdMaxSat, estimUfdMaxSatInt] = measureRuntime([&]() { return runUfdMaxSatDecoder(pcm, syndrInt); });
+    gf2Vec estimUfdMaxSat                      = Utils::toGf2Vec(estimUfdMaxSatInt);
+    std::cout << "\nEstimUfdMaxSat: ";
+    Utils::printGF2vector(estimUfdMaxSat);
+    std::cout << "\n\n";
+
+    // compare results with actual error
+    EXPECT_EQ(estimUFD, err);
+    EXPECT_EQ(estimMS, err);
+    if (peel) {
+        EXPECT_EQ(estimUfdPeel, err);
+    }
+    EXPECT_EQ(estimUfdMatrix, err);
+    EXPECT_EQ(estimUfdMaxSat, err);
+
+    std::cout << "Runtime (UFDecoder): " << runtimeUFD << " seconds\n";
+    std::cout << "Runtime (MaxSatDecoder): " << runtimeMS << " seconds\n";
+    if (peel) {
+        std::cout << "Runtime (ldpc::uf::UfDecoder peel_decode): " << runtimeUfdPeel << " seconds\n";
+    }
+    std::cout << "Runtime (ldpc::uf::UfDecoder matrix_decode): " << runtimeUfdMatrix << " seconds\n";
+    std::cout << "Runtime (ldpc::uf::UfDecoder maxsat_decode): " << runtimeUfdMaxSat << " seconds\n\n";
+}
+
+TEST_P(DecoderComparison, SteaneXCodeTest) {
     auto code = SteaneXCode();
     std::cout << "Code: " << '\n'
               << code << '\n';
@@ -102,48 +127,20 @@ TEST_P(DecoderComparison, SingleBitErrs) {
     Utils::printGF2vector(syndr);
     std::cout << '\n';
 
-    auto [runtimeUFD, estimUFD] = measureRuntime([&]() { return runUFDecoder(code, syndr); });
-    auto [runtimeMS, estimMS]   = measureRuntime([&]() { return runMaxSatDecoder(code, syndr); });
-
-    // transform pcm and syndrome to right format
-    ldpc::bp::BpSparse         pcm      = transformToPcm(code);
-    std::vector<uint8_t> const syndrInt = transformToInt(syndr);
-
-    /* because peel only works for planar codes
-    auto [runtimeUfdPeel, estimUfdPeelInt]     = measureRuntime([&]() { return runUfdPeelDecoder(pcm, syndrInt); });
-    gf2Vec estimUfdPeel = transformToGf2(estimUfdPeelInt);
-    */
-    auto [runtimeUfdMatrix, estimUfdMatrixInt] = measureRuntime([&]() { return runUfdMatrixDecoder(pcm, syndrInt); });
-    auto [runtimeUfdMaxSat, estimUfdMaxSatInt] = measureRuntime([&]() { return runUfdMaxSatDecoder(pcm, syndrInt); });
-    gf2Vec estimUfdMatrix = transformToGf2(estimUfdMatrixInt);
-    gf2Vec estimUfdMaxSat = transformToGf2(estimUfdMaxSatInt);
-
-    std::cout << "Sol: ";
-    Utils::printGF2vector(err);
-    std::cout << "\nEstimUFD: ";
-    Utils::printGF2vector(estimUFD);
-    std::cout << "\nEstimMS: ";
-    Utils::printGF2vector(estimMS);
-    // std::cout << "\nEstimUfdPeel: ";
-    // Utils::printGF2vector(estimUfdPeel);
-    std::cout << "\nEstimUfdMatrix: ";
-    Utils::printGF2vector(estimUfdMatrix);
-    std::cout << "\nEstimUfdMaxSat: ";
-    Utils::printGF2vector(estimUfdMaxSat);
-    std::cout << "\n\n";
-
-    // compare results with actual error
-    EXPECT_EQ(estimUFD, err);
-    EXPECT_EQ(estimMS, err);
-    // EXPECT_EQ(estimUfdPeel, err);
-    EXPECT_EQ(estimUfdMatrix, err);
-    EXPECT_EQ(estimUfdMaxSat, err);
-
-    std::cout << "Runtime (UFDecoder): " << runtimeUFD << " seconds\n";
-    std::cout << "Runtime (MaxSatDecoder): " << runtimeMS << " seconds\n";
-    // std::cout << "Runtime (ldpc::uf::UfDecoder peel_decode): " << runtimeUfdPeel << " seconds\n";
-    std::cout << "Runtime (ldpc::uf::UfDecoder matrix_decode): " << runtimeUfdMatrix << " seconds\n";
-    std::cout << "Runtime (ldpc::uf::UfDecoder maxsat_decode): " << runtimeUfdMaxSat << " seconds\n\n";
+    testAllDecoders(code, err, syndr, false);
 }
 
+TEST_P(DecoderComparison, ToricCode8Test) {
+    auto code = ToricCode8();
+    std::cout << "Code: " << '\n'
+              << code << '\n';
 
+    gf2Vec err = GetParam();
+    err.push_back('0');
+    gf2Vec const syndr = code.getXSyndrome(err);
+    std::cout << "Syndrome: ";
+    Utils::printGF2vector(syndr);
+    std::cout << '\n';
+
+    testAllDecoders(code, err, syndr, true);
+}
