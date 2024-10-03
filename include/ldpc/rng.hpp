@@ -6,6 +6,7 @@
 #ifndef RNG_HPP
 #define RNG_HPP
 
+#include <algorithm>
 #include <random>
 #include <chrono> // for std::chrono::system_clock
 

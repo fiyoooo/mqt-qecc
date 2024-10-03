@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Code.hpp"
 #include "GF2.hpp"
-#include "ldpc/bp.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -79,8 +77,6 @@ public:
     readInFilePathsFromDirectory(const std::string& inPath, std::vector<std::string>& codePaths);
 
     static CscMatrix toCsc(const gf2Mat& mat);
-
-    static ldpc::bp::BpSparse toBpSparse(Code& code);
 
     static std::vector<uint8_t> toUint8(const gf2Vec& syndrome);
 

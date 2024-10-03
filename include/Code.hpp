@@ -2,6 +2,7 @@
 
 #include "QeccException.hpp"
 #include "Utils.hpp"
+#include "ldpc/bp.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -340,5 +341,19 @@ public:
 
     [[nodiscard]] std::string toString() const {
         return this->to_json().dump(2U);
+    }
+
+    ldpc::bp::BpSparse toBpSparse() {
+        auto&              pcm = this->hZ->pcm;
+        ldpc::bp::BpSparse result(pcm->size(), pcm->front().size());
+        for (int i = 0; i < result.m; ++i) {
+            gf2Vec& row = pcm->operator[](i);
+            for (int j = 0; j < row.size(); ++j) {
+                if (row[j]) {
+                    result.insert_entry(i, j);
+                }
+            }
+        }
+        return result;
     }
 };

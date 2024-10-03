@@ -215,20 +215,6 @@ CscMatrix Utils::toCsc(const gf2Mat& mat) {
     return result;
 }
 
-ldpc::bp::BpSparse Utils::toBpSparse(Code& code) {
-    auto&              hZ = code.gethZ()->pcm;
-    ldpc::bp::BpSparse pcm(hZ->size(), hZ->front().size());
-    for (int i = 0; i < pcm.m; ++i) {
-        gf2Vec& row = hZ->operator[](i);
-        for (int j = 0; j < row.size(); ++j) {
-            if (row[j]) {
-                pcm.insert_entry(i, j);
-            }
-        }
-    }
-    return pcm;
-}
-
 std::vector<uint8_t> Utils::toUint8(const gf2Vec& syndrome) {
     std::vector<uint8_t> result;
     for (bool i : syndrome) {
