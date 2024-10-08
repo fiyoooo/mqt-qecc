@@ -21,25 +21,16 @@ INSTANTIATE_TEST_SUITE_P(SingleBitErrs, DecoderComparison,
                                  gf2Vec{0, 0, 0, 0, 0, 0, 0},
                                  gf2Vec{1, 0, 0, 0, 0, 0, 0},
                                  gf2Vec{0, 1, 0, 0, 0, 0, 0},
-                                 gf2Vec{0, 0, 1, 0, 0, 0, 0},
-                                 gf2Vec{0, 0, 0, 1, 0, 0, 0},
-                                 gf2Vec{0, 0, 0, 0, 1, 0, 0},
-                                 gf2Vec{0, 0, 0, 0, 0, 1, 0},
-                                 gf2Vec{0, 0, 0, 0, 0, 0, 1}));
+                                 gf2Vec{0, 0, 1, 0, 0, 0, 0}));
 
 INSTANTIATE_TEST_SUITE_P(firstOrderErrorRate, RandomDecoderComparison,
                          ::testing::Values(
                                  0,
-                                 0.01,
-                                 0.02,
-                                 0.03,
-                                 0.04,
-                                 0.05,
-                                 0.06,
-                                 0.07,
-                                 0.08,
-                                 0.09,
-                                 0.1));
+                                 0.01, 0.02,
+                                 0.03, 0.04,
+                                 0.05, 0.06,
+                                 0.07, 0.08,
+                                 0.09, 0.1));
 
 gf2Vec runUFDecoder(Code& code, const gf2Vec& syndrome) {
     UFDecoder ufDecoder(code);
@@ -144,7 +135,7 @@ gf2Vec generateRandomError(size_t size, double prob) {
     return err;
 }
 
-std::tuple<std::vector<double>, std::vector<double>> compareDecodersWithRandomErrors(Code& code, double prob, int numRounds, bool peel) {
+std::tuple<std::vector<int>, std::vector<double>> compareDecodersWithRandomErrors(Code& code, double prob, int numRounds, bool peel, bool verbose) {
     int failuresUFD       = 0;
     int failuresMS        = 0;
     int failuresUfdPeel   = 0;
@@ -219,57 +210,41 @@ std::tuple<std::vector<double>, std::vector<double>> compareDecodersWithRandomEr
         }
     }
 
-    // Output results
-    std::cout << "Total random errors tested: " << numRounds << "\n";
-    std::cout << "Zero-bit, one-bit, two-bit or other errors: "
-              << zeroBitErrors << ", "
-              << oneBitErrors << ", "
-              << twoBitErrors << ", "
-              << otherErrors << "\n\n";
-
-    double const logErrRateUFD       = static_cast<double>(failuresUFD) / numRounds;
-    double const logErrRateMS        = static_cast<double>(failuresMS) / numRounds;
-    double const logErrRateUfdPeel   = peel ? static_cast<double>(failuresUfdPeel) / numRounds : 0;
-    double const logErrRateUfdMatrix = static_cast<double>(failuresUfdMatrix) / numRounds;
-    double const logErrRateUfdMaxSat = static_cast<double>(failuresUfdMaxSat) / numRounds;
-
-    std::cout << "UFD, MaxSatD, ldpc::uf::UfD peel, matrix, maxsat:"
-              << "\n";
-    std::cout << "Logical-error rate: "
-              << logErrRateUFD << ", "
-              << logErrRateMS << ", "
-              << logErrRateUfdPeel << ", "
-              << logErrRateUfdMatrix << ", "
-              << logErrRateUfdMaxSat << "\n";
-
     double const avgRuntimeUFD       = totalRuntimeUFD / numRounds;
     double const avgRuntimeMS        = totalRuntimeMS / numRounds;
     double const avgRuntimeUfdPeel   = peel ? (totalRuntimeUfdPeel / numRounds) : 0;
     double const avgRuntimeUfdMatrix = totalRuntimeUfdMatrix / numRounds;
     double const avgRuntimeUfdMaxSat = totalRuntimeUfdMaxSat / numRounds;
 
-    std::cout << "Average runtime: "
-              << avgRuntimeUFD << ", "
-              << avgRuntimeMS << ", "
-              << avgRuntimeUfdPeel << ", "
-              << avgRuntimeUfdMatrix << ", "
-              << avgRuntimeUfdMaxSat << "\n\n";
-
-    std::vector<double> const logErrRate  = {logErrRateUFD, logErrRateMS, logErrRateUfdPeel, logErrRateUfdMatrix, logErrRateUfdMaxSat};
+    std::vector<int> const    failures    = {failuresUFD, failuresMS, failuresUfdPeel, failuresUfdMatrix, failuresUfdMaxSat};
     std::vector<double> const avgRuntimes = {avgRuntimeUFD, avgRuntimeMS, avgRuntimeUfdPeel, avgRuntimeUfdMatrix, avgRuntimeUfdMaxSat};
 
-    return std::make_tuple(logErrRate, avgRuntimes);
-}
+    if (verbose) {
+        std::cout << "Total random errors tested: " << numRounds << "\n";
+        std::cout << "Zero-bit, one-bit, two-bit or other errors: "
+                  << zeroBitErrors << ", "
+                  << oneBitErrors << ", "
+                  << twoBitErrors << ", "
+                  << otherErrors << "\n\n";
 
-void printPythonVector(std::vector<double>& vec) {
-    std::cout << '[';
-    for (size_t i = 0; i < vec.size(); ++i) {
-        std::cout << vec[i];
-        if (i < vec.size() - 1) {
-            std::cout << ", ";
-        }
+        std::cout << "UFD, MaxSatD, ldpc::uf::UfD peel, matrix, maxsat:"
+                  << "\n";
+        std::cout << "Number of failures: "
+                  << failuresUFD << ", "
+                  << failuresMS << ", "
+                  << failuresUfdPeel << ", "
+                  << failuresUfdMatrix << ", "
+                  << failuresUfdMaxSat << "\n";
+
+        std::cout << "Average runtime: "
+                  << avgRuntimeUFD << ", "
+                  << avgRuntimeMS << ", "
+                  << avgRuntimeUfdPeel << ", "
+                  << avgRuntimeUfdMatrix << ", "
+                  << avgRuntimeUfdMaxSat << "\n\n";
     }
-    std::cout << ']' << '\n';
+
+    return std::make_tuple(failures, avgRuntimes);
 }
 
 TEST_P(DecoderComparison, SteaneXCodeTest) {
@@ -286,21 +261,6 @@ TEST_P(DecoderComparison, SteaneXCodeTest) {
     testAllDecoders(code, err, syndr, false);
 }
 
-TEST_P(DecoderComparison, ToricCode8Test) {
-    auto code = ToricCode8();
-    std::cout << "Code: " << '\n'
-              << code << '\n';
-
-    gf2Vec err = GetParam();
-    err.push_back(0);
-    gf2Vec const syndr = code.getXSyndrome(err);
-    std::cout << "Syndrome: ";
-    Utils::printGF2vector(syndr);
-    std::cout << '\n';
-
-    testAllDecoders(code, err, syndr, true);
-}
-
 TEST_P(RandomDecoderComparison, SteaneXCodeTest) {
     auto code = SteaneXCode();
     std::cout << "Code: " << '\n'
@@ -309,7 +269,7 @@ TEST_P(RandomDecoderComparison, SteaneXCodeTest) {
     double const prob = GetParam();
     std::cout << "Bit-error rate: " << prob << '\n';
 
-    compareDecodersWithRandomErrors(code, prob, 100, false);
+    compareDecodersWithRandomErrors(code, prob, 100, false, true);
 }
 
 TEST_P(RandomDecoderComparison, ToricCode8Test) {
@@ -320,5 +280,87 @@ TEST_P(RandomDecoderComparison, ToricCode8Test) {
     double const prob = GetParam();
     std::cout << "Bit-error rate: " << prob << '\n';
 
-    compareDecodersWithRandomErrors(code, prob, 100, true);
+    compareDecodersWithRandomErrors(code, prob, 100, true, true);
+}
+
+class DecoderErrorRateTest : public ::testing::TestWithParam<std::reference_wrapper<Code>> {
+protected:
+    std::vector<double> errorProbabilities = {0.01, 0.02, 0.03, 0.04, 0.05,
+                                              0.06, 0.07, 0.08, 0.09, 0.1};
+    int                 numRounds          = 1000;
+    bool                peel               = true; // whether to use the peel decoder
+
+    std::vector<double> ufDecoderErrorRates;
+    std::vector<double> maxSatDecoderErrorRates;
+    std::vector<double> ufdPeelErrorRates;
+    std::vector<double> ufdMatrixErrorRates;
+    std::vector<double> ufdMaxSatErrorRates;
+
+    void runTestForDecoders(Code& code) {
+        ufDecoderErrorRates.resize(errorProbabilities.size());
+        maxSatDecoderErrorRates.resize(errorProbabilities.size());
+        ufdPeelErrorRates.resize(errorProbabilities.size());
+        ufdMatrixErrorRates.resize(errorProbabilities.size());
+        ufdMaxSatErrorRates.resize(errorProbabilities.size());
+
+        for (size_t i = 0; i < errorProbabilities.size(); ++i) {
+            double const prob = errorProbabilities[i];
+
+            auto [failures, runtimes] = compareDecodersWithRandomErrors(code, prob, numRounds, peel, false);
+
+            ufDecoderErrorRates[i]     = failures[0] / static_cast<double>(numRounds);
+            maxSatDecoderErrorRates[i] = failures[1] / static_cast<double>(numRounds);
+            if (peel) {
+                ufdPeelErrorRates[i] = failures[2] / static_cast<double>(numRounds);
+            }
+            ufdMatrixErrorRates[i] = failures[3] / static_cast<double>(numRounds);
+            ufdMaxSatErrorRates[i] = failures[4] / static_cast<double>(numRounds);
+        }
+    }
+
+    static void printPythonVector(std::vector<double>& vec) {
+        std::cout << '[';
+        for (size_t i = 0; i < vec.size(); ++i) {
+            std::cout << vec[i];
+            if (i < vec.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << ']' << '\n';
+    }
+
+    void printResults() {
+        std::cout << "uf_err_rates = ";
+        printPythonVector(ufDecoderErrorRates);
+
+        std::cout << "ms_err_rates = ";
+        printPythonVector(maxSatDecoderErrorRates);
+
+        if (peel) {
+            std::cout << "peel_err_rates = ";
+            printPythonVector(ufdPeelErrorRates);
+        }
+
+        std::cout << "matrix_err_rates = ";
+        printPythonVector(ufdMatrixErrorRates);
+
+        std::cout << "ufms_err_rates = ";
+        printPythonVector(ufdMaxSatErrorRates);
+    }
+};
+
+ToricCode8  code8;
+ToricCode18 code18;
+ToricCode32 code32;
+
+INSTANTIATE_TEST_SUITE_P(ToricCodes, DecoderErrorRateTest,
+                         ::testing::Values(
+                                 std::ref(code8),
+                                 std::ref(code18),
+                                 std::ref(code32)));
+
+TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
+    Code& code = GetParam().get();
+    runTestForDecoders(code);
+    printResults();
 }
