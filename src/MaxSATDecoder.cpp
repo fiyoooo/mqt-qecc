@@ -42,7 +42,11 @@ void MaxSATDecoder::preconstructZ3Instance() {
             }
             helper_vars_.emplace(light, exprVec);
         }
-        preconstructParityConstraint(light, switches);
+
+        // if helper_vars_ empty at light then no constraints needed TODO correct?
+        if (!helper_vars_.at(light).empty()) {
+            preconstructParityConstraint(light, switches);
+        }
     }
 
     // add soft constraints (switches set to False)
@@ -181,6 +185,11 @@ void MaxSATDecoder::completeParityConstraint(std::size_t light, const std::vecto
 
     // get helper variables for the given light
     auto& helperVars = helper_vars_.at(light);
+
+    // if only one switch toggles light TODO correct?
+    if (helperVars.empty()) {
+        return;
+    }
 
     // switch_0 XOR h_0 == val
     z3::expr const constraint = (switch_vars_[switches[0]] ^ helperVars[0]) == ctx_.bool_val(val);
