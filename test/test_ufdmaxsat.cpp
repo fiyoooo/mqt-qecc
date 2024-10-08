@@ -51,7 +51,7 @@ INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestUFDMaxSAT,
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, UpToStabCorrectableErrTestUFDMaxSAT,
                          testing::Values(
-                                 std::vector<uint8_t>{1, 0, 1, 0, 0, 0, 0}));
+                                 std::vector<uint8_t>{1, 0, 1, 0, 1, 0, 0}));
 
 void printPcm(ldpc::bp::BpSparse& pcm) {
     for (int j = 0; j < pcm.m; j++) {
@@ -238,6 +238,6 @@ TEST_P(UpToStabCorrectableErrTestUFDMaxSAT, SteaneCodeDecodingTest) {
     std::cout << "\n\n";
 
     EXPECT_FALSE(estim == err);
-    // EXPECT_TRUE(Utils::isVectorInRowspace(pcm, residualErr));
+    EXPECT_TRUE(Utils::isVectorInRowspace(Code::toGf2Mat(pcm), Utils::toGf2Vec(residualErr)));
 }
 // NOLINTEND(readability-implicit-bool-conversion,modernize-use-bool-literals)

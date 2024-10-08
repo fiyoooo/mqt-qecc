@@ -356,4 +356,15 @@ public:
         }
         return result;
     }
+
+    static gf2Mat toGf2Mat(ldpc::bp::BpSparse& pcm) {
+        gf2Mat result(pcm.m, gf2Vec(pcm.n));
+        for (int j = 0; j < pcm.m; j++) {
+            for (int i = 0; i < pcm.n; i++) {
+                // if no entry in that position of matrix
+                result.at(j).at(i) = !pcm.get_entry(j, i).at_end();
+            }
+        }
+        return result;
+    }
 };
