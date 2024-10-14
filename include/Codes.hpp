@@ -31,6 +31,8 @@ public:
     HGPcode(const std::string& hxIn, const std::string& hzIn, const std::size_t size) : Code(hxIn, hzIn) { k = size; };
 };
 
+// Surface codes
+
 class ToricCode8 : public Code {
 public:
     ToricCode8() : Code("./resources/codes/toric_(nan,nan)-[[8,2,2]]_hx.txt") {
@@ -52,5 +54,47 @@ public:
     ToricCode32() : Code("./resources/codes/toric_(nan,nan)-[[32,2,4]]_hx.txt") {
         k = 2;
         n = 32;
+    }
+};
+
+// QLDPC codes from https://arxiv.org/abs/2308.07915
+
+class BivarBikeCode72 : public Code {
+public:
+    BivarBikeCode72() : Code("./resources/codes/bb_(,)_[[72,12,6]]_hx.txt",
+                             "./resources/codes/bb_(,)_[[72,12,6]]_hz.txt") {
+        k = 12;
+        n = 72;
+        d = 6;
+    }
+};
+
+class BivarBikeCode90 : public Code {
+public:
+    BivarBikeCode90() : Code("./resources/codes/bb_(,)_[[90,8,10]]_hx.txt",
+                             "./resources/codes/bb_(,)_[[90,8,10]]_hz.txt") {
+        k = 8;
+        n = 90;
+        d = 10;
+    }
+};
+
+class BivarBikeCode144 : public Code {
+public:
+    BivarBikeCode144() : Code("./resources/codes/bb_(,)_[[144,12,12]]_hx.txt",
+                              "./resources/codes/bb_(,)_[[144,12,12]]_hz.txt") {
+        k = 12;
+        n = 144;
+        d = 12;
+    }
+};
+
+class BivarBikeCode288 : public Code {
+public:
+    BivarBikeCode288() : Code("./resources/codes/bb_(,)_[[288,12,18]]_hx.txt",
+                              "./resources/codes/bb_(,)_[[288,12,18]]_hz.txt") {
+        k = 12;
+        n = 288;
+        d = 18;
     }
 };
