@@ -8,6 +8,7 @@ add_library(
         ${MQT_QECC_HEADERS}
         ${LDPC_HEADERS}
         ldpc/gf2sparse_linalg.cpp
+        DecoderComparison.cpp
         DecodingSimulator.cpp
         GF2.cpp
         LightsOut.cpp
