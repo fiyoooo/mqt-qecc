@@ -61,8 +61,8 @@ public:
 
 class BivarBikeCode72 : public Code {
 public:
-    BivarBikeCode72() : Code("./resources/codes/bb_(,)_[[72,12,6]]_hx.txt",
-                             "./resources/codes/bb_(,)_[[72,12,6]]_hz.txt") {
+    BivarBikeCode72() : Code("./resources/codes/bbCodes/bb_(,)_[[72,12,6]]_hx.txt",
+                             "./resources/codes/bbCodes/bb_(,)_[[72,12,6]]_hz.txt") {
         k = 12;
         n = 72;
         d = 6;
@@ -71,8 +71,8 @@ public:
 
 class BivarBikeCode90 : public Code {
 public:
-    BivarBikeCode90() : Code("./resources/codes/bb_(,)_[[90,8,10]]_hx.txt",
-                             "./resources/codes/bb_(,)_[[90,8,10]]_hz.txt") {
+    BivarBikeCode90() : Code("./resources/codes/bbCodes/bb_(,)_[[90,8,10]]_hx.txt",
+                             "./resources/codes/bbCodes/bb_(,)_[[90,8,10]]_hz.txt") {
         k = 8;
         n = 90;
         d = 10;
@@ -81,8 +81,8 @@ public:
 
 class BivarBikeCode144 : public Code {
 public:
-    BivarBikeCode144() : Code("./resources/codes/bb_(,)_[[144,12,12]]_hx.txt",
-                              "./resources/codes/bb_(,)_[[144,12,12]]_hz.txt") {
+    BivarBikeCode144() : Code("./resources/codes/bbCodes/bb_(,)_[[144,12,12]]_hx.txt",
+                              "./resources/codes/bbCodes/bb_(,)_[[144,12,12]]_hz.txt") {
         k = 12;
         n = 144;
         d = 12;
@@ -91,8 +91,8 @@ public:
 
 class BivarBikeCode288 : public Code {
 public:
-    BivarBikeCode288() : Code("./resources/codes/bb_(,)_[[288,12,18]]_hx.txt",
-                              "./resources/codes/bb_(,)_[[288,12,18]]_hz.txt") {
+    BivarBikeCode288() : Code("./resources/codes/bbCodes/bb_(,)_[[288,12,18]]_hx.txt",
+                              "./resources/codes/bbCodes/bb_(,)_[[288,12,18]]_hz.txt") {
         k = 12;
         n = 288;
         d = 18;
