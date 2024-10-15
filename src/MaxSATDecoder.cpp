@@ -18,19 +18,21 @@ MaxSATDecoder::MaxSATDecoder(Code& c)
  * Soft constraints are added to the optimizer with default weights.
  */
 void MaxSATDecoder::preconstructZ3Instance() {
-    const std::unique_ptr<ParityCheckMatrix>& pcm = this->getCode()->gethZ();
-    std::size_t const                         k   = pcm->pcm->size();        // number of lights
-    std::size_t const                         n   = this->getCode()->getN(); // number of switches
+    const std::unique_ptr<ParityCheckMatrix>& pcm    = this->getCode()->gethZ();
+    auto&                                     matrix = *(pcm->pcm);
+    // Utils::printGF2matrix(matrix);
+    std::size_t const numLights   = pcm->pcm->size();        // number of lights
+    std::size_t const numSwitches = this->getCode()->getN(); // number of switches
 
     // declare switches as variables
     if (switch_vars_.empty()) {
-        for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t i = 0; i < numSwitches; ++i) {
             switch_vars_.push_back(ctx_.bool_const(("switch_" + std::to_string(i)).c_str()));
         }
     }
 
     // create helper variables and add known parity constraints
-    for (std::size_t light = 0; light < k; light++) {
+    for (std::size_t light = 0; light < numLights; light++) {
         const std::vector<unsigned>& switches = getSwitches(light, pcm); // TODO change to gf2Vec
 
         // check if helper variables already exist for light
@@ -46,6 +48,8 @@ void MaxSATDecoder::preconstructZ3Instance() {
         // if helper_vars_ empty at light then no constraints needed TODO correct?
         if (!helper_vars_.at(light).empty()) {
             preconstructParityConstraint(light, switches);
+        } else {
+            // std::cout << "light " << light << " has no switches (" << switches.size() << ")" << '\n';
         }
     }
 
@@ -68,11 +72,11 @@ void MaxSATDecoder::decode(const gf2Vec& syndrome) {
 
     const auto constructionTimeBegin = std::chrono::high_resolution_clock::now();
 
-    const std::unique_ptr<ParityCheckMatrix>& pcm = this->getCode()->gethZ();
-    std::size_t const                         k   = pcm->pcm->size(); // number of lights
+    const std::unique_ptr<ParityCheckMatrix>& pcm       = this->getCode()->gethZ();
+    std::size_t const                         numLights = pcm->pcm->size(); // number of lights
 
     // add the problem specific constraints
-    for (std::size_t light = 0; light < k; light++) {
+    for (std::size_t light = 0; light < numLights; light++) {
         const std::vector<unsigned>& switches = getSwitches(light, pcm); // TODO change to gf2Vec
         completeParityConstraint(light, switches, syndrome[light]);
     }
@@ -114,7 +118,10 @@ void MaxSATDecoder::decode(const gf2Vec& syndrome) {
 
     // check found solution
     if (result != z3::sat) {
-        throw std::logic_error("No solution found");
+        // std::cout << "No solution found with MaxSAT-Decoder for syndrome " << '\n';
+        // Utils::printGF2vector(syndrome);
+        // std::cout << '\n';
+        throw std::logic_error("No solution found with MaxSAT-Decoder.");
     }
     if (!validateModel(model, syndrome)) {
         throw std::logic_error("Model is invalid");

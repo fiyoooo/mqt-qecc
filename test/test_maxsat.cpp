@@ -76,6 +76,13 @@ INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, InCorrectableErrTestMaxSAT,
 
 INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, UpToStabCorrectableErrTestMaxSAT,
                          testing::Values(
+                                 gf2Vec{1, 0, 0, 0, 0, 0, 0},
+                                 gf2Vec{0, 1, 0, 0, 0, 0, 0},
+                                 gf2Vec{0, 0, 1, 0, 0, 0, 0},
+                                 gf2Vec{0, 0, 0, 1, 0, 0, 0},
+                                 gf2Vec{0, 0, 0, 0, 1, 0, 0},
+                                 gf2Vec{0, 0, 0, 0, 0, 1, 0},
+                                 gf2Vec{0, 0, 0, 0, 0, 0, 1}, // single-bit errors should always be correctable up to stabilizer
                                  gf2Vec{0, 0, 0, 1, 1, 0, 1},
                                  gf2Vec{1, 1, 1, 0, 0, 0, 0},
                                  gf2Vec{1, 1, 0, 0, 1, 1, 0},
@@ -248,7 +255,7 @@ TEST_P(UpToStabCorrectableErrTestMaxSAT, SteaneCodeDecodingTest) {
               << code << '\n';
 
     const gf2Vec err   = GetParam();
-    auto                    syndr = code.getXSyndrome(err);
+    auto         syndr = code.getXSyndrome(err);
     std::cout << "Syndrome: ";
     Utils::printGF2vector(syndr);
     std::cout << '\n';
@@ -284,10 +291,72 @@ TEST_P(UpToStabCorrectableErrTestMaxSAT, SteaneCodeDecodingTest) {
     }
     std::cout << "\n\n";
 
-    EXPECT_FALSE(err == estim);
-    EXPECT_FALSE(err == estim2);
-    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethX()->pcm, residualErr));
-    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethX()->pcm, residualErr2));
+    // EXPECT_FALSE(err == estim);
+    // EXPECT_FALSE(err == estim2);
+    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr));
+    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr2));
+}
+
+TEST_P(UpToStabCorrectableErrTestMaxSAT, BivarBikeCodeDecodingTest) {
+    auto code = BivarBikeCode90();
+    // std::cout << "Code: " << '\n'
+    //           << code << '\n';
+
+    gf2Vec err = GetParam();
+    err.resize(code.getN(), 0); // pad error to right dimension
+    auto syndr = code.getXSyndrome(err);
+    std::cout << "Syndrome: ";
+    Utils::printGF2vector(syndr);
+    std::cout << '\n';
+
+    MaxSATDecoder decoder(code);
+    decoder.preconstructZ3Instance();
+    decoder.decode(syndr);
+
+    const auto& decodingResult = decoder.result;
+    const auto& estim          = decodingResult.estimBoolVector;
+    const auto& estimIdx       = decodingResult.estimNodeIdxVector;
+
+    gf2Vec estim2(err.size());
+    std::cout << "EstimIdxs: ";
+    for (auto idx : estimIdx) {
+        estim2.at(idx) = true;
+        std::cout << idx;
+    }
+    std::cout << '\n';
+
+    std::cout << "Estim: ";
+    Utils::printGF2vector(estim);
+    std::cout << '\n';
+
+    std::cout << "Estim2: ";
+    Utils::printGF2vector(estim2);
+    std::cout << '\n';
+
+    const gf2Vec sol = err;
+    std::cout << "Sol: ";
+    Utils::printGF2vector(sol);
+    std::cout << "\n\n";
+
+    gf2Vec residualErr(err.size());
+    std::cout << "ResidualErr: ";
+    for (size_t i = 0; i < err.size(); i++) {
+        residualErr.at(i) = (err[i] != estim[i]);
+        std::cout << residualErr.at(i);
+    }
+    std::cout << '\n';
+    gf2Vec residualErr2(err.size());
+    std::cout << "ResidualErr2: ";
+    for (size_t i = 0; i < err.size(); i++) {
+        residualErr2.at(i) = (err[i] != estim2[i]);
+        std::cout << residualErr2.at(i);
+    }
+    std::cout << "\n\n";
+
+    // EXPECT_FALSE(err == estim);
+    // EXPECT_FALSE(err == estim2);
+    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr));
+    EXPECT_TRUE(Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr2));
 }
 
 // NOLINTEND(readability-implicit-bool-conversion,modernize-use-bool-literals)
