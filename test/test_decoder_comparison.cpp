@@ -80,44 +80,59 @@ protected:
     int                      numRounds          = 1000;
     bool                     peel               = true; // whether to use the peel decoder
 
-    std::vector<std::vector<double>> errorRates = std::vector<std::vector<double>>(5);
+    std::vector<std::vector<double>> errorRates  = std::vector<std::vector<double>>(5);
+    std::vector<std::vector<double>> avgRuntimes = std::vector<std::vector<double>>(5);
 
     void runTestForDecoders(Code& code) {
         DecoderComparisonHelper dch = DecoderComparisonHelper(code, peel);
-        for (auto& er : errorRates) {
-            er.resize(errorProbabilities.size());
+        for (size_t i = 0; i < errorRates.size(); ++i) {
+            errorRates[i].resize(errorProbabilities.size());
+            avgRuntimes[i].resize(errorProbabilities.size());
         }
 
+        // for each physical error rate...
         for (size_t i = 0; i < errorProbabilities.size(); ++i) {
             double const prob = errorProbabilities[i];
 
-            auto [testErrorRates, runtimes] = dch.testWithErrorRate(prob, numRounds, false);
+            // ... run all decoders...
+            auto [testErrorRates, runtimes] = dch.testWithErrorRate(prob, numRounds, true);
+            // ... and store the outcome
             for (size_t j = 0; j < errorRates.size(); ++j) {
-                errorRates[j][i] = testErrorRates[j];
+                errorRates[j][i]  = testErrorRates[j];
+                avgRuntimes[j][i] = runtimes[j];
             }
         }
     }
 
     // WIP
-    void storeResultsAsJson(int distance) {
+    void storeResultsAsJson(const std::string& codeParams) {
         for (size_t i = 0; i < decoders.size(); ++i) {
             json results = json::array();
 
             for (size_t j = 0; j < errorProbabilities.size(); ++j) {
                 json entry;
-                entry["distance"]       = distance;
-                entry["p"]              = errorProbabilities[j];
-                entry["avg_total_time"] = errorRates[i][j]; // Or any other data you want
+                entry["code"]                   = codeParams;
+                entry["p"]                      = errorProbabilities[j];
+                entry["logical_error_rates"]    = errorRates[i][j];
+                entry["logical_error_rate_ebs"] = 1e-6; // TODO change, what does it mean?
+                entry["avg_total_time"]         = avgRuntimes[i][j];
+                entry["min_wts_logical_err"]    = 0; // TODO change, what does it mean?
 
                 results.push_back(entry);
             }
 
-            // create directory for solver if not exists and save results
-            std::string const dir = "./decoder_results/" + decoders[i];
+            // create directory for solver if not existent and save results
+            std::string const dir = std::filesystem::absolute("../../test/decoder_results/" + decoders[i]).string(); // TODO change, make prettier
             std::filesystem::create_directories(dir);
 
-            // save the file
-            std::ofstream file(dir + "/results_" + std::to_string(distance) + ".json");
+            // save file
+            std::string const filename = dir + "/results_" + codeParams + ".json";
+            std::ofstream     file(filename);
+            if (!file) {
+                std::cerr << "Error opening file: " << filename << '\n';
+                continue; // skip to next decoder if file opening fails
+            }
+
             file << results.dump(4); // pretty print JSON with 4 spaces indentation
             file.close();
         }
@@ -176,6 +191,7 @@ TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
     Code& code = GetParam().get();
     peel       = false;
     runTestForDecoders(code);
-    storeResultsAsJson(4);
+    std::string const codeParams = "[[" + std::to_string(code.n) + "," + std::to_string(code.k) + "," + std::to_string(code.d) + "]]";
+    storeResultsAsJson(codeParams);
     printResults();
 }

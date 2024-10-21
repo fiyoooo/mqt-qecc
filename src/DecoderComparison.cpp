@@ -100,7 +100,11 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
         std::cout << "\n\n";
 
         std::cout << "UFD, MaxSatD, (ldpc::uf::UfD) peel, matrix, maxsat:\n";
-        std::cout << "Error rates: ";
+        std::cout << "Failures: ";
+        for (const auto& failure : failures) {
+            std::cout << failure << "  ";
+        }
+        std::cout << "\nError rates: ";
         for (const auto& errorRate : errorRates) {
             std::cout << errorRate << "  ";
         }

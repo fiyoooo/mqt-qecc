@@ -8,16 +8,18 @@
 class SteaneXCode : public Code {
 public:
     SteaneXCode() : Code("./resources/codes/testCode.txt") {
-        k = 3;
+        k = 3; // TODO not 1?
         n = 7;
+        d = 3;
     }
 };
 
 class SteaneCode : public Code {
 public:
     SteaneCode() : Code("./resources/codes/testCode.txt", "./resources/codes/testCode.txt") {
-        k = 3;
+        k = 3; // TODO not 1?
         n = 7;
+        d = 3;
     }
 };
 
@@ -38,6 +40,7 @@ public:
     ToricCode8() : Code("./resources/codes/toric_(nan,nan)-[[8,2,2]]_hx.txt") {
         k = 2;
         n = 8;
+        d = 2;
     }
 };
 
@@ -46,6 +49,7 @@ public:
     ToricCode18() : Code("./resources/codes/toric_(nan,nan)-[[18,2,3]]_hx.txt") {
         k = 2;
         n = 18;
+        d = 3;
     }
 };
 
@@ -54,6 +58,7 @@ public:
     ToricCode32() : Code("./resources/codes/toric_(nan,nan)-[[32,2,4]]_hx.txt") {
         k = 2;
         n = 32;
+        d = 4;
     }
 };
 
