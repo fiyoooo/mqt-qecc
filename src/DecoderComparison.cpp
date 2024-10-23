@@ -26,8 +26,10 @@ DecoderComparisonHelper::testWithError(const gf2Vec& err, bool verbose) {
     if (verbose) {
         std::cout << "\nEstimUFD: ";
         Utils::printGF2vector(estims[0]);
-        std::cout << "\nEstimMS: ";
-        Utils::printGF2vector(estims[1]);
+        if (maxsat) {
+            std::cout << "\nEstimMS: ";
+            Utils::printGF2vector(estims[1]);
+        }
         if (peel) {
             std::cout << "\nEstimUfdPeel: ";
             Utils::printGF2vector(estims[2]);
@@ -39,7 +41,9 @@ DecoderComparisonHelper::testWithError(const gf2Vec& err, bool verbose) {
         std::cout << "\n\n";
 
         std::cout << "Runtime (UFDecoder): " << runtimes[0] << " seconds\n";
-        std::cout << "Runtime (MaxSatDecoder): " << runtimes[1] << " seconds\n";
+        if (maxsat) {
+            std::cout << "Runtime (MaxSatDecoder): " << runtimes[1] << " seconds\n";
+        }
         if (peel) {
             std::cout << "Runtime (ldpc::uf::UfDecoder peel_decode): " << runtimes[2] << " seconds\n";
         }
@@ -59,10 +63,14 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
 
     size_t const size = code.getN();
 
-    for (int i = 0; i < numRounds; ++i) {
+    // test & track the failures
+    int const minErrors = 500; // minimal number of non-zero errors
+    int       i;
+    for (i = 0; (i < numRounds) || (i - bitErrorCounts[0] < minErrors); ++i) {
         gf2Vec const err   = generateRandomBitFlipError(size, prob);
         gf2Vec const syndr = code.getXSyndrome(err);
 
+        // count 0-bit, 1-bit, 2-bit, and 3+ bit errors
         size_t const bitCount = static_cast<const size_t>(std::count(err.begin(), err.end(), 1));
         if (bitCount <= 2) {
             ++bitErrorCounts[bitCount]; // increment count for 0, 1, or 2 bit flips
@@ -70,29 +78,30 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
             ++bitErrorCounts[3]; // increment count for 3 or more bit flips
         }
 
+        // run all decoders
         auto [estims, runtimes] = runDecoders(syndr);
         for (size_t j = 0; j < 5; ++j) {
             totalRuntimes[j] += runtimes[j];
-            if ((j != 2 || peel) && !isCorrectable(err, estims[j])) {
+            if ((j != 1 || maxsat) && (j != 2 || peel) && !isCorrectable(err, estims[j])) {
                 ++failures[j];
             }
         }
     }
 
-    // get averages by dividing through numRounds
+    // get averages by dividing through number of rounds
     std::vector<double> errorRates;
     std::vector<double> avgRuntimes;
     errorRates.reserve(failures.size());
     for (int const& failure : failures) {
-        errorRates.push_back(static_cast<double>(failure) / numRounds);
+        errorRates.push_back(static_cast<double>(failure) / i);
     }
     avgRuntimes.reserve(totalRuntimes.size());
     for (double const& runtime : totalRuntimes) {
-        avgRuntimes.push_back(runtime / numRounds);
+        avgRuntimes.push_back(runtime / i);
     }
 
     if (verbose) {
-        std::cout << "Total random errors tested: " << numRounds << "\n";
+        std::cout << "Total random errors tested: " << i << " with physical error rate " << prob << "\n";
         std::cout << "Zero-bit, one-bit, two-bit or other errors: ";
         for (const auto& bitCount : bitErrorCounts) {
             std::cout << bitCount << " ";
@@ -132,7 +141,12 @@ gf2Vec DecoderComparisonHelper::generateRandomBitFlipError(size_t size, double p
 
 std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::runDecoders(gf2Vec const& syndr) {
     auto [runtimeUFD, estimUFD] = measureRuntime([&]() { return runUFDecoder(syndr); });
-    auto [runtimeMS, estimMS]   = measureRuntime([&]() { return runMaxSatDecoder(syndr); });
+
+    gf2Vec estimMS;
+    double runtimeMS = 0;
+    if (maxsat) {
+        std::tie(runtimeMS, estimMS) = measureRuntime([&]() { return runMaxSatDecoder(syndr); });
+    }
 
     // transform syndrome to right format
     std::vector<uint8_t> const syndrInt = Utils::toUint8(syndr);
@@ -140,8 +154,9 @@ std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::ru
     gf2Vec estimUfdPeel;
     double runtimeUfdPeel = 0;
     if (peel) {
-        auto [runtimeUfdPeel, estimUfdPeelInt] = measureRuntime([&]() { return runUfdPeelDecoder(syndrInt); });
-        estimUfdPeel                           = Utils::toGf2Vec(estimUfdPeelInt);
+        auto [runtimeUfdPeel_, estimUfdPeelInt] = measureRuntime([&]() { return runUfdPeelDecoder(syndrInt); });
+        runtimeUfdPeel                          = runtimeUfdPeel_;
+        estimUfdPeel                            = Utils::toGf2Vec(estimUfdPeelInt);
     }
 
     auto [runtimeUfdMatrix, estimUfdMatrixInt] = measureRuntime([&]() { return runUfdMatrixDecoder(syndrInt); });
@@ -198,7 +213,5 @@ bool DecoderComparisonHelper::isCorrectable(gf2Vec const& error, gf2Vec const& e
     for (size_t i = 0; i < error.size(); i++) {
         residualErr.at(i) = (error[i] != estimation[i]);
     }
-    // TODO or return code.isStabilizer(residualErr);
-    // TODO or return code.isXStabilizer(residualErr);
     return Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr);
 }

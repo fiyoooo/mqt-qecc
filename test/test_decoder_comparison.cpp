@@ -32,7 +32,7 @@ TEST_P(DecoderComparison, SteaneXCodeTest) {
     bool const peel = false; // peel decoder doesn't work
     std::cout << "Code: " << '\n'
               << code << '\n';
-    DecoderComparisonHelper dch = DecoderComparisonHelper(code, peel);
+    DecoderComparisonHelper dch = DecoderComparisonHelper(code, true, peel);
 
     gf2Vec const err        = GetParam();
     auto [estims, runtimes] = dch.testWithError(err);
@@ -50,7 +50,7 @@ TEST_P(RandomErrorDecoderComparison, SteaneXCodeTest) {
     bool const peel = false;
     std::cout << "Code: " << '\n'
               << code << '\n';
-    DecoderComparisonHelper dch = DecoderComparisonHelper(code, peel);
+    DecoderComparisonHelper dch = DecoderComparisonHelper(code, true, peel);
 
     double const prob = GetParam();
     std::cout << "Bit-error rate: " << prob << '\n';
@@ -63,7 +63,7 @@ TEST_P(RandomErrorDecoderComparison, ToricCode8Test) {
     bool const peel = true;
     std::cout << "Code: " << '\n'
               << code << '\n';
-    DecoderComparisonHelper dch = DecoderComparisonHelper(code, peel);
+    DecoderComparisonHelper dch = DecoderComparisonHelper(code, true, peel);
 
     double const prob = GetParam();
     std::cout << "Bit-error rate: " << prob << '\n';
@@ -74,17 +74,18 @@ TEST_P(RandomErrorDecoderComparison, ToricCode8Test) {
 // TODO integrate in DecoderComparison?
 class DecoderErrorRateTest : public ::testing::TestWithParam<std::reference_wrapper<Code>> {
 protected:
-    std::vector<std::string> decoders           = {"ufDecoder", "maxSatDecoder", "ufdPeelDecoder", "ufdMatrixDecoder", "ufdMaxSatDecoder"};
+    std::vector<std::string> decoders           = {"UF", "MaxSAT", "UF-peel", "UF-matrix", "UF-maxSAT"};
     std::vector<double>      errorProbabilities = {0.01, 0.02, 0.03, 0.04, 0.05,
                                                    0.06, 0.07, 0.08, 0.09, 0.1};
     int                      numRounds          = 1000;
+    bool                     maxsat             = true; // whether to use the maxsat decoder
     bool                     peel               = true; // whether to use the peel decoder
 
     std::vector<std::vector<double>> errorRates  = std::vector<std::vector<double>>(5);
     std::vector<std::vector<double>> avgRuntimes = std::vector<std::vector<double>>(5);
 
     void runTestForDecoders(Code& code) {
-        DecoderComparisonHelper dch = DecoderComparisonHelper(code, peel);
+        DecoderComparisonHelper dch = DecoderComparisonHelper(code, maxsat, peel);
         for (size_t i = 0; i < errorRates.size(); ++i) {
             errorRates[i].resize(errorProbabilities.size());
             avgRuntimes[i].resize(errorProbabilities.size());
@@ -104,7 +105,6 @@ protected:
         }
     }
 
-    // WIP
     void storeResultsAsJson(const std::string& codeParams) {
         for (size_t i = 0; i < decoders.size(); ++i) {
             json results = json::array();
@@ -153,8 +153,10 @@ protected:
         std::cout << "uf_err_rates = ";
         printPythonVector(errorRates[0]);
 
-        std::cout << "ms_err_rates = ";
-        printPythonVector(errorRates[1]);
+        if (maxsat) {
+            std::cout << "ms_err_rates = ";
+            printPythonVector(errorRates[1]);
+        }
 
         if (peel) {
             std::cout << "peel_err_rates = ";
@@ -169,26 +171,38 @@ protected:
     }
 };
 
-ToricCode8       code8;
-ToricCode18      code18;
-ToricCode32      code32;
-BivarBikeCode72  code72; // maxSAT throws error
-BivarBikeCode90  code90;
-BivarBikeCode144 code144; // runs too long
-BivarBikeCode288 code288; // runs too long
+// toric codes X
+ToricXCode8  toricX8;
+ToricXCode18 toricX18;
+ToricXCode32 toricX32;
+
+// even toric codes
+ToricCode8  toric8;
+ToricCode32 toric32;
+ToricCode72 toric72;
+
+// odd toric codes
+ToricCode18 toric18;
+ToricCode50 toric50;
+ToricCode98 toric98;
+
+// ldpc codes
+BivarBikeCode72  bb72; // pure maxSAT throws error
+BivarBikeCode90  bb90;
+BivarBikeCode144 bb144; // pure maxsat runs too long
+BivarBikeCode288 bb288; // pure maxsat runs too long
 
 INSTANTIATE_TEST_SUITE_P(ToricCodes, DecoderErrorRateTest,
                          ::testing::Values(
-                                 std::ref(code8), std::ref(code18),
-                                 std::ref(code32) //,
-                                 // std::ref(code72)//,
-                                 // std::ref(code90)
-                                 // std::ref(code144)
-                                 // std::ref(code288)
+                                 // std::ref(toricX8), std::ref(toricX18), std::ref(toricX32)
+                                 // std::ref(toric8), std::ref(toric32), std::ref(toric72)
+                                 // std::ref(toric18), std::ref(toric50), std::ref(toric98)
+                                 std::ref(bb72), std::ref(bb90), std::ref(bb144) //, std::ref(code288)
                                  ));
 
 TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
     Code& code = GetParam().get();
+    maxsat     = false;
     peel       = false;
     runTestForDecoders(code);
     std::string const codeParams = "[[" + std::to_string(code.n) + "," + std::to_string(code.k) + "," + std::to_string(code.d) + "]]";
