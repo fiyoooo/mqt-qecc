@@ -1,0 +1,82 @@
+[
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.01
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.02
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.03
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.04
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.05
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.06
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.07
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.08
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.09
+    },
+    {
+        "avg_total_time": 0.0,
+        "code": "[[8,2,2]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.0,
+        "min_wts_logical_err": 0,
+        "p": 0.1
+    }
+]
