@@ -35,30 +35,84 @@ public:
 
 // Surface codes
 
-class ToricCode8 : public Code {
+class ToricXCode8 : public Code {
 public:
-    ToricCode8() : Code("./resources/codes/toric_(nan,nan)-[[8,2,2]]_hx.txt") {
+    ToricXCode8() : Code("./resources/codes/toric_(nan,nan)-[[8,2,2]]_hx.txt") {
         k = 2;
         n = 8;
         d = 2;
     }
 };
 
-class ToricCode18 : public Code {
+class ToricCode8 : public Code {
 public:
-    ToricCode18() : Code("./resources/codes/toric_(nan,nan)-[[18,2,3]]_hx.txt") {
+    ToricCode8() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[8,2,2]]_hz.txt") {
+        k = 2;
+        n = 8;
+        d = 2;
+    }
+};
+
+class ToricXCode18 : public Code {
+public:
+    ToricXCode18() : Code("./resources/codes/toric_(nan,nan)-[[18,2,3]]_hx.txt") {
         k = 2;
         n = 18;
         d = 3;
     }
 };
 
-class ToricCode32 : public Code {
+class ToricCode18 : public Code {
 public:
-    ToricCode32() : Code("./resources/codes/toric_(nan,nan)-[[32,2,4]]_hx.txt") {
+    ToricCode18() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[18,2,3]]_hz.txt") {
+        k = 2;
+        n = 18;
+        d = 3;
+    }
+};
+
+class ToricXCode32 : public Code {
+public:
+    ToricXCode32() : Code("./resources/codes/toric_(nan,nan)-[[32,2,4]]_hx.txt") {
         k = 2;
         n = 32;
         d = 4;
+    }
+};
+
+class ToricCode32 : public Code {
+public:
+    ToricCode32() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[32,2,4]]_hz.txt") {
+        k = 2;
+        n = 32;
+        d = 4;
+    }
+};
+
+class ToricCode50 : public Code {
+public:
+    ToricCode50() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[50,2,5]]_hz.txt") {
+        k = 2;
+        n = 50;
+        d = 5;
+    }
+};
+
+class ToricCode72 : public Code {
+public:
+    ToricCode72() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[72,2,6]]_hz.txt") {
+        k = 2;
+        n = 72;
+        d = 6;
+    }
+};
+
+class ToricCode98 : public Code {
+public:
+    ToricCode98() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[98,2,7]]_hz.txt") {
+        k = 2;
+        n = 98;
+        d = 7;
     }
 };
 
