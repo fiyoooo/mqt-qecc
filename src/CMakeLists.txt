@@ -8,6 +8,8 @@ add_library(
         ${MQT_QECC_HEADERS}
         ${LDPC_HEADERS}
         ldpc/gf2sparse_linalg.cpp
+        ldpc/lsd.cpp
+        ldpc/lsd_cluster.cpp
         ldpc/osd.cpp
         ldpc/sort.cpp
         ldpc/util.cpp

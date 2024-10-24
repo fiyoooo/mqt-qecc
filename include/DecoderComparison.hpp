@@ -3,6 +3,18 @@
 #include <tuple>
 #include <vector>
 
+/*
+ * Steps for adding a new decoder to this class:
+ *      1. Add a new run...Decoder function where your decoder is instantiated and run with a given syndrome.
+ *      2. Call this function in runDecoders while measuring the runtime.
+ *      3. Make sure to store these results in the output vectors of runDecoders.
+ *      4. Adjust the number of Decoders in the first line of testWithErrorRate.
+ *      5. Adjust the verbose output in testWithErrorRate.
+ *      6. (Optional) If decoder is called before maxsat or peel decoder,
+ *          indices when counting failures in testWithErrorRate have to be adjusted
+ *          to ensure that these two are still left out or used depending on the given bools.
+ */
+
 class DecoderComparisonHelper {
 public:
     DecoderComparisonHelper(Code& code, bool useMaxSATDecoder = false, bool usePeelDecoder = false)
@@ -35,6 +47,7 @@ private:
     gf2Vec               runUFDecoder(gf2Vec const& syndrome);
     gf2Vec               runMaxSatDecoder(gf2Vec const& syndrome);
     std::vector<uint8_t> runOsdDecoder(std::vector<uint8_t>& syndrome, double prob);
+    std::vector<uint8_t> runLsdDecoder(std::vector<uint8_t>& syndrome, double prob);
     std::vector<uint8_t> runUfdPeelDecoder(std::vector<uint8_t> const& syndrome);
     std::vector<uint8_t> runUfdMatrixDecoder(std::vector<uint8_t> const& syndrome);
     std::vector<uint8_t> runUfdMaxSatDecoder(std::vector<uint8_t> const& syndrome);

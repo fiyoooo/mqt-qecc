@@ -10,6 +10,7 @@ package_add_test_with_working_dir(
         test_originalUfd.cpp
         test_simulator.cpp
         test_treenode.cpp
+        TestLsd.cpp
         TestOsdDecoder.cpp
 )
 

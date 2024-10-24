@@ -74,7 +74,7 @@ TEST_P(RandomErrorDecoderComparison, ToricCode8Test) {
 // TODO integrate in DecoderComparison?
 class DecoderErrorRateTest : public ::testing::TestWithParam<std::reference_wrapper<Code>> {
 protected:
-    std::vector<std::string> decoders           = {"UF", "MaxSAT", "OSD", "UF-peel", "UF-matrix", "UF-maxSAT"};
+    std::vector<std::string> decoders           = {"UF", "MaxSAT", "OSD", "LSD", "UF-peel", "UF-matrix", "UF-maxSAT"};
     std::vector<double>      errorProbabilities = {0.01, 0.02, 0.03, 0.04, 0.05,
                                                    0.06, 0.07, 0.08, 0.09, 0.1};
     int                      numRounds          = 1000;
@@ -187,7 +187,7 @@ ToricCode50 toric50;
 ToricCode98 toric98;
 
 // ldpc codes
-BivarBikeCode72  bb72; // pure maxSAT throws error
+BivarBikeCode72  bb72; // pure maxSAT throws error, TODO investigate
 BivarBikeCode90  bb90;
 BivarBikeCode144 bb144; // pure maxsat runs too long
 BivarBikeCode288 bb288; // pure maxsat runs too long
@@ -195,9 +195,9 @@ BivarBikeCode288 bb288; // pure maxsat runs too long
 INSTANTIATE_TEST_SUITE_P(ToricCodes, DecoderErrorRateTest,
                          ::testing::Values(
                                  // std::ref(toricX8), std::ref(toricX18), std::ref(toricX32)
-                                 // std::ref(toric8), std::ref(toric32), std::ref(toric72)
-                                 std::ref(toric18), std::ref(toric50), std::ref(toric98)
-                                 //std::ref(bb72), std::ref(bb90), std::ref(bb144) //, std::ref(code288)
+                                 std::ref(toric8), std::ref(toric32)//, std::ref(toric72)
+                                 // std::ref(toric18), std::ref(toric50), std::ref(toric98)
+                                 // std::ref(bb72), std::ref(bb90), std::ref(bb144) //, std::ref(bb288)
                                  ));
 
 TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
