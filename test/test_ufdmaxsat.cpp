@@ -17,11 +17,43 @@
 
 using namespace ldpc::uf;
 
+// for changing data types between decoder packages
+class VectorTranslationTest : public testing::TestWithParam<gf2Vec> {};
+class MatrixTranslationTest : public testing::TestWithParam<std::reference_wrapper<Code>> {};
+
 class UFDMaxSATTest : public testing::TestWithParam<std::vector<uint8_t>> {};
 class UFDComparison : public testing::TestWithParam<gf2Vec> {};
 class UniquelyCorrectableErrTestUFDMaxSAT : public UFDMaxSATTest {};
 class InCorrectableErrTestUFDMaxSAT : public UFDMaxSATTest {};
 class UpToStabCorrectableErrTestUFDMaxSAT : public UFDMaxSATTest {};
+
+// toric codes X
+ToricXCode8  tX8;
+ToricXCode18 tX18;
+ToricXCode32 tX32;
+
+// even toric codes
+ToricCode8  t8;
+ToricCode32 t32;
+ToricCode72 t72;
+
+// odd toric codes
+ToricCode18 t18;
+ToricCode50 t50;
+ToricCode98 t98;
+
+// ldpc codes
+BivarBikeCode72  bivb72; // pure maxSAT throws error
+BivarBikeCode90  bivb90;
+BivarBikeCode144 bivb144; // pure maxsat runs too long
+BivarBikeCode288 bivb288; // pure maxsat runs too long
+
+INSTANTIATE_TEST_SUITE_P(ToricCodes, MatrixTranslationTest,
+                         ::testing::Values(
+                                 std::ref(tX8), std::ref(tX18), std::ref(tX32),
+                                 std::ref(t8), std::ref(t32), std::ref(t72),
+                                 std::ref(t18), std::ref(t50), std::ref(t98),
+                                 std::ref(bivb72), std::ref(bivb90), std::ref(bivb144), std::ref(bivb288)));
 
 INSTANTIATE_TEST_SUITE_P(UFDComparisonSteane, UFDComparison,
                          testing::Values(
@@ -53,6 +85,18 @@ INSTANTIATE_TEST_SUITE_P(UptoStabCorrSteane, UpToStabCorrectableErrTestUFDMaxSAT
                          testing::Values(
                                  std::vector<uint8_t>{1, 0, 1, 0, 1, 0, 0}));
 
+gf2Vec generateRandomGf2Vec(size_t size) {
+    std::random_device          rd;
+    std::mt19937                gen(rd());
+    std::bernoulli_distribution dist(0.5); // prob is probability for a bit to be 1 (to have flipped)
+
+    gf2Vec err(size);
+    for (size_t i = 0; i < size; ++i) {
+        err[i] = dist(gen);
+    }
+    return err;
+}
+
 void printPcm(ldpc::bp::BpSparse& pcm) {
     for (int j = 0; j < pcm.m; j++) {
         for (int i = 0; i < pcm.n; i++) {
@@ -65,6 +109,29 @@ void printPcm(ldpc::bp::BpSparse& pcm) {
         }
         std::cout << '\n';
     }
+}
+
+TEST(VectorTranslationTest, CompareVectors) {
+    for (int i = 0; i < 10000; ++i) {
+        gf2Vec const vec = generateRandomGf2Vec(100);
+        Utils::printGF2vector(vec);
+        auto vecInt = Utils::toUint8(vec);
+        for (const auto& j : vecInt) {
+            std::cout << j;
+        }
+        std::cout << '\n';
+        EXPECT_TRUE(vec == Utils::toGf2Vec(vecInt));
+    }
+}
+
+TEST_P(MatrixTranslationTest, CompareMatrices) {
+    Code& code = GetParam();
+    std::cout << "Code: " << '\n'
+              << code << '\n';
+    auto pcm = code.toBpSparse();
+    printPcm(pcm);
+
+    EXPECT_TRUE(code.getHzMat() == Code::toGf2Mat(pcm));
 }
 
 /**
