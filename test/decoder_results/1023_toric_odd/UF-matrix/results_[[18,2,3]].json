@@ -1,0 +1,82 @@
+[
+    {
+        "avg_total_time": 1.766640838926128e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.002645244778946406,
+        "logical_error_rates": 0.007046979865771812,
+        "min_wts_logical_err": 0,
+        "p": 0.01
+    },
+    {
+        "avg_total_time": 2.3700480319803106e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.004838382800236195,
+        "logical_error_rates": 0.023985239852398525,
+        "min_wts_logical_err": 0,
+        "p": 0.02
+    },
+    {
+        "avg_total_time": 3.327547087378631e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.007406691698159476,
+        "logical_error_rates": 0.05825242718446602,
+        "min_wts_logical_err": 0,
+        "p": 0.03
+    },
+    {
+        "avg_total_time": 4.217620699999987e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.008771772910877254,
+        "logical_error_rates": 0.084,
+        "min_wts_logical_err": 0,
+        "p": 0.04
+    },
+    {
+        "avg_total_time": 5.236721699999995e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.010088359628799918,
+        "logical_error_rates": 0.115,
+        "min_wts_logical_err": 0,
+        "p": 0.05
+    },
+    {
+        "avg_total_time": 6.380878999999994e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.012149074038789953,
+        "logical_error_rates": 0.18,
+        "min_wts_logical_err": 0,
+        "p": 0.06
+    },
+    {
+        "avg_total_time": 7.069346599999999e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.013524755080961725,
+        "logical_error_rates": 0.241,
+        "min_wts_logical_err": 0,
+        "p": 0.07
+    },
+    {
+        "avg_total_time": 7.900155199999992e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.014229406171727617,
+        "logical_error_rates": 0.282,
+        "min_wts_logical_err": 0,
+        "p": 0.08
+    },
+    {
+        "avg_total_time": 8.66520069999999e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.014846413708367418,
+        "logical_error_rates": 0.328,
+        "min_wts_logical_err": 0,
+        "p": 0.09
+    },
+    {
+        "avg_total_time": 8.941715900000006e-05,
+        "code": "[[18,2,3]]",
+        "logical_error_rate_ebs": 0.015317441039547044,
+        "logical_error_rates": 0.376,
+        "min_wts_logical_err": 0,
+        "p": 0.1
+    }
+]

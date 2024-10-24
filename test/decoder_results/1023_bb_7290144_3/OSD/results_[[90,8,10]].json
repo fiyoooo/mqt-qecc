@@ -1,0 +1,82 @@
+[
+    {
+        "avg_total_time": 0.000633515176,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.387,
+        "min_wts_logical_err": 0,
+        "p": 0.01
+    },
+    {
+        "avg_total_time": 0.0007395267419999998,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.646,
+        "min_wts_logical_err": 0,
+        "p": 0.02
+    },
+    {
+        "avg_total_time": 0.0007821211739999999,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.801,
+        "min_wts_logical_err": 0,
+        "p": 0.03
+    },
+    {
+        "avg_total_time": 0.0008055344659999993,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.885,
+        "min_wts_logical_err": 0,
+        "p": 0.04
+    },
+    {
+        "avg_total_time": 0.0008222216029999994,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.93,
+        "min_wts_logical_err": 0,
+        "p": 0.05
+    },
+    {
+        "avg_total_time": 0.0008299934439999994,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.95,
+        "min_wts_logical_err": 0,
+        "p": 0.06
+    },
+    {
+        "avg_total_time": 0.0008462985789999998,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.972,
+        "min_wts_logical_err": 0,
+        "p": 0.07
+    },
+    {
+        "avg_total_time": 0.0008397628880000008,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.986,
+        "min_wts_logical_err": 0,
+        "p": 0.08
+    },
+    {
+        "avg_total_time": 0.0008408904900000004,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.987,
+        "min_wts_logical_err": 0,
+        "p": 0.09
+    },
+    {
+        "avg_total_time": 0.0008363599700000013,
+        "code": "[[90,8,10]]",
+        "logical_error_rate_ebs": 1e-06,
+        "logical_error_rates": 0.994,
+        "min_wts_logical_err": 0,
+        "p": 0.1
+    }
+]
