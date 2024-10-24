@@ -343,6 +343,7 @@ public:
         return this->to_json().dump(2U);
     }
 
+    // TODO only for hz, make general
     ldpc::bp::BpSparse toBpSparse() {
         auto&              pcm = this->hZ->pcm;
         ldpc::bp::BpSparse result(pcm->size(), pcm->front().size());

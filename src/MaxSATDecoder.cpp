@@ -19,8 +19,6 @@ MaxSATDecoder::MaxSATDecoder(Code& c)
  */
 void MaxSATDecoder::preconstructZ3Instance() {
     const std::unique_ptr<ParityCheckMatrix>& pcm    = this->getCode()->gethZ();
-    auto&                                     matrix = *(pcm->pcm);
-    // Utils::printGF2matrix(matrix);
     std::size_t const numLights   = pcm->pcm->size();        // number of lights
     std::size_t const numSwitches = this->getCode()->getN(); // number of switches
 
@@ -45,7 +43,7 @@ void MaxSATDecoder::preconstructZ3Instance() {
             helper_vars_.emplace(light, exprVec);
         }
 
-        // if helper_vars_ empty at light then no constraints needed TODO correct?
+        // if helper_vars_ empty at light then no constraints needed
         if (!helper_vars_.at(light).empty()) {
             preconstructParityConstraint(light, switches);
         } else {
@@ -193,7 +191,7 @@ void MaxSATDecoder::completeParityConstraint(std::size_t light, const std::vecto
     // get helper variables for the given light
     auto& helperVars = helper_vars_.at(light);
 
-    // if only one switch toggles light TODO correct?
+    // if only one switch toggles light
     if (helperVars.empty()) {
         return;
     }
