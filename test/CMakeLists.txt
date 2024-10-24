@@ -9,7 +9,9 @@ package_add_test_with_working_dir(
         test_utils.cpp
         test_originalUfd.cpp
         test_simulator.cpp
-        test_treenode.cpp)
+        test_treenode.cpp
+        TestOsdDecoder.cpp
+)
 
 # files containing codes for tests
 file(

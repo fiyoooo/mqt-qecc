@@ -30,10 +30,11 @@ private:
 
     static gf2Vec generateRandomBitFlipError(size_t size, double prob);
 
-    std::tuple<std::vector<gf2Vec>, std::vector<double>> runDecoders(gf2Vec const& syndr);
+    std::tuple<std::vector<gf2Vec>, std::vector<double>> runDecoders(gf2Vec const& syndr, double prob = 0);
 
     gf2Vec               runUFDecoder(gf2Vec const& syndrome);
     gf2Vec               runMaxSatDecoder(gf2Vec const& syndrome);
+    std::vector<uint8_t> runOsdDecoder(std::vector<uint8_t>& syndrome, double prob);
     std::vector<uint8_t> runUfdPeelDecoder(std::vector<uint8_t> const& syndrome);
     std::vector<uint8_t> runUfdMatrixDecoder(std::vector<uint8_t> const& syndrome);
     std::vector<uint8_t> runUfdMaxSatDecoder(std::vector<uint8_t> const& syndrome);
