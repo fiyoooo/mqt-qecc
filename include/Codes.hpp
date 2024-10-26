@@ -116,6 +116,33 @@ public:
     }
 };
 
+class ToricCode128 : public Code {
+public:
+    ToricCode128() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[128,2,8]]_hz.txt") {
+        k = 2;
+        n = 128;
+        d = 8;
+    }
+};
+
+class ToricCode162 : public Code {
+public:
+    ToricCode162() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[162,2,9]]_hz.txt") {
+        k = 2;
+        n = 162;
+        d = 9;
+    }
+};
+
+class ToricCode200 : public Code {
+public:
+    ToricCode200() : Code("./resources/codes/toricCodes/toric_(nan,nan)-[[200,2,10]]_hz.txt") {
+        k = 2;
+        n = 200;
+        d = 10;
+    }
+};
+
 // QLDPC codes from https://arxiv.org/abs/2308.07915
 
 class BivarBikeCode72 : public Code {
