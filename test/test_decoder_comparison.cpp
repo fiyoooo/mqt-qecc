@@ -74,15 +74,16 @@ TEST_P(RandomErrorDecoderComparison, ToricCode8Test) {
 // TODO integrate in DecoderComparison?
 class DecoderErrorRateTest : public ::testing::TestWithParam<std::reference_wrapper<Code>> {
 protected:
-    std::vector<std::string> decoders           = {"UF", "MaxSAT", "OSD", "LSD", "UF-peel", "UF-matrix", "UF-maxSAT"};
-    std::vector<double>      errorProbabilities = {0.01, 0.02, 0.03, 0.04, 0.05,
+    std::vector<std::string> decoders           = {"UF", "MaxSAT", "BP", "OSD", "LSD", "UF-peel", "UF-matrix", "UF-maxSAT"};
+    std::vector<double>      errorProbabilities = {0.001, 0.005, 0.01, 0.02, 0.03, 0.04, 0.05,
                                                    0.06, 0.07, 0.08, 0.09, 0.1};
     int                      numRounds          = 1000;
     bool                     maxsat             = true; // whether to use the maxsat decoder
     bool                     peel               = true; // whether to use the peel decoder
 
-    std::vector<std::vector<double>> errorRates  = std::vector<std::vector<double>>(decoders.size());
-    std::vector<std::vector<double>> avgRuntimes = std::vector<std::vector<double>>(decoders.size());
+    std::vector<std::vector<double>> errorRates    = std::vector<std::vector<double>>(decoders.size());
+    std::vector<std::vector<double>> avgRuntimes   = std::vector<std::vector<double>>(decoders.size());
+    std::vector<int>                 realNumRounds = std::vector<int>(errorProbabilities.size());
 
     void runTestForDecoders(Code& code) {
         DecoderComparisonHelper dch = DecoderComparisonHelper(code, maxsat, peel);
@@ -96,12 +97,13 @@ protected:
             double const prob = errorProbabilities[i];
 
             // ... run all decoders...
-            auto [testErrorRates, runtimes] = dch.testWithErrorRate(prob, numRounds, true);
+            auto [testErrorRates, runtimes, realNumRound] = dch.testWithErrorRate(prob, numRounds, true);
             // ... and store the outcome
             for (size_t j = 0; j < errorRates.size(); ++j) {
                 errorRates[j][i]  = testErrorRates[j];
                 avgRuntimes[j][i] = runtimes[j];
             }
+            realNumRounds[i] = realNumRound;
         }
     }
 
@@ -114,7 +116,7 @@ protected:
                 entry["code"]                   = codeParams;
                 entry["p"]                      = errorProbabilities[j];
                 entry["logical_error_rates"]    = errorRates[i][j];
-                entry["logical_error_rate_ebs"] = sqrt((1 - errorRates[i][j]) * errorRates[i][j] / numRounds); // error bars
+                entry["logical_error_rate_ebs"] = sqrt((1 - errorRates[i][j]) * errorRates[i][j] / realNumRounds[j]); // error bars
                 entry["avg_total_time"]         = avgRuntimes[i][j];
                 entry["min_wts_logical_err"]    = 0; // TODO change, what does it mean?
 
@@ -150,24 +152,12 @@ protected:
     }
 
     void printResults() {
-        std::cout << "uf_err_rates = ";
-        printPythonVector(errorRates[0]);
-
-        if (maxsat) {
-            std::cout << "ms_err_rates = ";
-            printPythonVector(errorRates[1]);
+        for (size_t i = 0; i < decoders.size(); ++i) {
+            if ((i != 1 || maxsat) && (i != 5 || peel)) {
+                std::cout << decoders[i] << "_err_rates = ";
+                printPythonVector(errorRates[i]);
+            }
         }
-
-        if (peel) {
-            std::cout << "peel_err_rates = ";
-            printPythonVector(errorRates[2]);
-        }
-
-        std::cout << "matrix_err_rates = ";
-        printPythonVector(errorRates[3]);
-
-        std::cout << "ufms_err_rates = ";
-        printPythonVector(errorRates[4]);
     }
 };
 
@@ -180,11 +170,14 @@ ToricXCode32 toricX32;
 ToricCode8  toric8;
 ToricCode32 toric32;
 ToricCode72 toric72;
+ToricCode128 toric128;
+ToricCode200 toric200;
 
 // odd toric codes
 ToricCode18 toric18;
 ToricCode50 toric50;
 ToricCode98 toric98;
+ToricCode162 toric162;
 
 // ldpc codes
 BivarBikeCode72  bb72; // pure maxSAT throws error, TODO investigate
@@ -192,12 +185,12 @@ BivarBikeCode90  bb90;
 BivarBikeCode144 bb144; // pure maxsat runs too long
 BivarBikeCode288 bb288; // pure maxsat runs too long
 
-INSTANTIATE_TEST_SUITE_P(ToricCodes, DecoderErrorRateTest,
+INSTANTIATE_TEST_SUITE_P(ToricAndBBCodes, DecoderErrorRateTest,
                          ::testing::Values(
                                  // std::ref(toricX8), std::ref(toricX18), std::ref(toricX32)
-                                 std::ref(toric8), std::ref(toric32)//, std::ref(toric72)
-                                 // std::ref(toric18), std::ref(toric50), std::ref(toric98)
-                                 // std::ref(bb72), std::ref(bb90), std::ref(bb144) //, std::ref(bb288)
+                                 // std::ref(toric8), std::ref(toric32) //, std::ref(toric72), std::ref(toric128), std::ref(toric200)
+                                 std::ref(toric18), std::ref(toric50), std::ref(toric98), std::ref(toric162)
+                                 // std::ref(bb72), std::ref(bb90) //, std::ref(bb144) //, std::ref(bb288)
                                  ));
 
 TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {

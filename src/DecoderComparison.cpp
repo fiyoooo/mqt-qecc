@@ -32,33 +32,39 @@ DecoderComparisonHelper::testWithError(const gf2Vec& err, bool verbose) {
             std::cout << "\nEstimMS: ";
             Utils::printGF2vector(estims[1]);
         }
+        std::cout << "\nEstimOsd: ";
+        Utils::printGF2vector(estims[2]);
+        std::cout << "\nEstimLsd: ";
+        Utils::printGF2vector(estims[3]);
         if (peel) {
             std::cout << "\nEstimUfdPeel: ";
-            Utils::printGF2vector(estims[2]);
+            Utils::printGF2vector(estims[4]);
         }
         std::cout << "\nEstimUfdMatrix: ";
-        Utils::printGF2vector(estims[3]);
+        Utils::printGF2vector(estims[5]);
         std::cout << "\nEstimUfdMaxSat: ";
-        Utils::printGF2vector(estims[4]);
+        Utils::printGF2vector(estims[6]);
         std::cout << "\n\n";
 
         std::cout << "Runtime (UFDecoder): " << runtimes[0] << " seconds\n";
         if (maxsat) {
             std::cout << "Runtime (MaxSatDecoder): " << runtimes[1] << " seconds\n";
         }
+        std::cout << "Runtime (ldpc::osd::OsdDecoder): " << runtimes[2] << " seconds\n";
+        std::cout << "Runtime (ldpc::lsd::LsdDecoder): " << runtimes[3] << " seconds\n";
         if (peel) {
-            std::cout << "Runtime (ldpc::uf::UfDecoder peel_decode): " << runtimes[2] << " seconds\n";
+            std::cout << "Runtime (ldpc::uf::UfDecoder peel_decode): " << runtimes[4] << " seconds\n";
         }
-        std::cout << "Runtime (ldpc::uf::UfDecoder matrix_decode): " << runtimes[3] << " seconds\n";
-        std::cout << "Runtime (ldpc::uf::UfDecoder maxsat_decode): " << runtimes[4] << " seconds\n\n";
+        std::cout << "Runtime (ldpc::uf::UfDecoder matrix_decode): " << runtimes[5] << " seconds\n";
+        std::cout << "Runtime (ldpc::uf::UfDecoder maxsat_decode): " << runtimes[6] << " seconds\n\n";
     }
 
     return std::make_tuple(estims, runtimes);
 }
 
-std::tuple<std::vector<double>, std::vector<double>>
+std::tuple<std::vector<double>, std::vector<double>, int>
 DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verbose) {
-    size_t const        numDecoders = 7; // bc we test 7 decoders, TODO make attribute?
+    size_t const        numDecoders = 8; // bc we test 8 decoders, TODO make attribute?
     std::vector<int>    failures(numDecoders);
     std::vector<double> totalRuntimes(numDecoders);
 
@@ -67,7 +73,7 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
     size_t const size = code.getN();
 
     // test & track the failures
-    int const minErrors = 500; // minimal number of non-zero errors
+    int const minErrors = 700; // minimal number of non-zero errors
     int       i;
     for (i = 0; (i < numRounds) || (i - bitErrorCounts[0] < minErrors); ++i) {
         gf2Vec const err   = generateRandomBitFlipError(size, prob);
@@ -82,10 +88,10 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
         }
 
         // run all decoders
-        auto [estims, runtimes] = runDecoders(syndr, prob);
+        auto [estims, runtimes] = runDecoders(syndr);
         for (size_t j = 0; j < numDecoders; ++j) {
             totalRuntimes[j] += runtimes[j];
-            if ((j != 1 || maxsat) && (j != 4 || peel) && !isCorrectable(err, estims[j])) {
+            if ((j != 1 || maxsat) && (j != 5 || peel) && !isCorrectable(err, estims[j])) {
                 ++failures[j];
             }
         }
@@ -111,7 +117,7 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
         }
         std::cout << "\n\n";
 
-        std::cout << "UFD, MaxSatD, (ldpc::osd) OSDD, (ldpc::lsd) LSDD, (ldpc::uf::UfD) peel, matrix, maxsat:\n";
+        std::cout << "UFD, MaxSatD, (ldpc::bp) BPD, (ldpc::osd) OSDD, (ldpc::lsd) LSDD, (ldpc::uf::UfD) peel, matrix, maxsat:\n";
         std::cout << "Failures: ";
         for (const auto& failure : failures) {
             std::cout << failure << "  ";
@@ -127,7 +133,15 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
         std::cout << "\n\n";
     }
 
-    return std::make_tuple(errorRates, avgRuntimes);
+    return std::make_tuple(errorRates, avgRuntimes, i);
+}
+
+bool DecoderComparisonHelper::isCorrectable(gf2Vec const& error, gf2Vec const& estimation) {
+    gf2Vec residualErr(error.size());
+    for (size_t i = 0; i < error.size(); i++) {
+        residualErr.at(i) = (error[i] != estimation[i]);
+    }
+    return Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr);
 }
 
 gf2Vec DecoderComparisonHelper::generateRandomBitFlipError(size_t size, double prob) {
@@ -142,7 +156,7 @@ gf2Vec DecoderComparisonHelper::generateRandomBitFlipError(size_t size, double p
     return err;
 }
 
-std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::runDecoders(gf2Vec const& syndr, double prob) {
+std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::runDecoders(gf2Vec const& syndr) {
     auto [runtimeUFD, estimUFD] = measureRuntime([&]() { return runUFDecoder(syndr); });
 
     gf2Vec estimMS;
@@ -154,10 +168,13 @@ std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::ru
     // transform syndrome to right format for ldpc
     std::vector<uint8_t> syndrInt = Utils::toUint8(syndr);
 
-    auto [runtimeOsd, estimOsdInt] = measureRuntime([&]() { return runOsdDecoder(syndrInt, prob); });
+    auto [runtimeBp, estimBpInt] = measureRuntime([&]() { return runBpDecoder(syndrInt); });
+    gf2Vec const estimBp         = Utils::toGf2Vec(estimBpInt);
+
+    auto [runtimeOsd, estimOsdInt] = measureRuntime([&]() { return runOsdDecoder(syndrInt); });
     gf2Vec const estimOsd          = Utils::toGf2Vec(estimOsdInt);
 
-    auto [runtimeLsd, estimLsdInt] = measureRuntime([&]() { return runLsdDecoder(syndrInt, prob); });
+    auto [runtimeLsd, estimLsdInt] = measureRuntime([&]() { return runLsdDecoder(syndrInt); });
     gf2Vec const estimLsd          = Utils::toGf2Vec(estimLsdInt);
 
     gf2Vec estimUfdPeel;
@@ -174,8 +191,8 @@ std::tuple<std::vector<gf2Vec>, std::vector<double>> DecoderComparisonHelper::ru
     auto [runtimeUfdMaxSat, estimUfdMaxSatInt] = measureRuntime([&]() { return runUfdMaxSatDecoder(syndrInt); });
     gf2Vec const estimUfdMaxSat                = Utils::toGf2Vec(estimUfdMaxSatInt);
 
-    std::vector<gf2Vec> const estims   = {estimUFD, estimMS, estimOsd, estimLsd, estimUfdPeel, estimUfdMatrix, estimUfdMaxSat};
-    std::vector<double> const runtimes = {runtimeUFD, runtimeMS, runtimeOsd, runtimeLsd, runtimeUfdPeel, runtimeUfdMatrix, runtimeUfdMaxSat};
+    std::vector<gf2Vec> const estims   = {estimUFD, estimMS, estimBp, estimOsd, estimLsd, estimUfdPeel, estimUfdMatrix, estimUfdMaxSat};
+    std::vector<double> const runtimes = {runtimeUFD, runtimeMS, runtimeBp, runtimeOsd, runtimeLsd, runtimeUfdPeel, runtimeUfdMatrix, runtimeUfdMaxSat};
 
     return std::make_tuple(estims, runtimes);
 }
@@ -193,8 +210,15 @@ gf2Vec DecoderComparisonHelper::runMaxSatDecoder(gf2Vec const& syndrome) {
     return maxSATSolver.result.estimBoolVector;
 }
 
-std::vector<uint8_t> DecoderComparisonHelper::runOsdDecoder(std::vector<uint8_t>& syndrome, double prob) {
-    auto                  errorChannel = std::vector<double>(pcm.n, prob);
+std::vector<uint8_t> DecoderComparisonHelper::runBpDecoder(std::vector<uint8_t>& syndrome) {
+    auto channelProb = std::vector<double>(pcm.n, 0.1);
+    auto decoder     = ldpc::bp::BpDecoder(pcm, channelProb, pcm.n, ldpc::bp::PRODUCT_SUM,
+                                           ldpc::bp::SERIAL, 4324234, ldpc::bp::AUTO);
+    return decoder.decode(syndrome);
+}
+
+std::vector<uint8_t> DecoderComparisonHelper::runOsdDecoder(std::vector<uint8_t>& syndrome) {
+    auto                  errorChannel = std::vector<double>(pcm.n, 0.2); // TODO correct?
     ldpc::osd::OsdDecoder osdDecoderLdpc(pcm, ldpc::osd::COMBINATION_SWEEP, 3, errorChannel);
     std::vector<double>   lbr; // log-likelihood ratios
     lbr.reserve(pcm.n);
@@ -204,8 +228,8 @@ std::vector<uint8_t> DecoderComparisonHelper::runOsdDecoder(std::vector<uint8_t>
     return osdDecoderLdpc.decode(syndrome, lbr);
 }
 
-std::vector<uint8_t> DecoderComparisonHelper::runLsdDecoder(std::vector<uint8_t>& syndrome, double prob) {
-    auto                  errorChannel = std::vector<double>(pcm.n, prob);
+std::vector<uint8_t> DecoderComparisonHelper::runLsdDecoder(std::vector<uint8_t>& syndrome) {
+    auto                  errorChannel = std::vector<double>(pcm.n, 0.1); // TODO correct?
     ldpc::lsd::LsdDecoder lsdDecoderLdpc(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP, 3);
 
     std::vector<double> lbr; // log-likelihood ratios
@@ -238,12 +262,4 @@ std::tuple<double, ReturnType> DecoderComparisonHelper::measureRuntime(Func func
     auto                                end      = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> const duration = end - start;
     return std::make_tuple(duration.count(), estim);
-}
-
-bool DecoderComparisonHelper::isCorrectable(gf2Vec const& error, gf2Vec const& estimation) {
-    gf2Vec residualErr(error.size());
-    for (size_t i = 0; i < error.size(); i++) {
-        residualErr.at(i) = (error[i] != estimation[i]);
-    }
-    return Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr);
 }
