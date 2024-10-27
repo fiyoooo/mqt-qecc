@@ -112,6 +112,9 @@ class Code {
 private:
     std::unique_ptr<ParityCheckMatrix> hX;
     std::unique_ptr<ParityCheckMatrix> hZ;
+    // TODO don't know if they are really pcms?
+    std::unique_ptr<ParityCheckMatrix> lX;
+    std::unique_ptr<ParityCheckMatrix> lZ;
 
 public:
     std::size_t n = 0U;
@@ -135,6 +138,14 @@ public:
         return *this->hZ->pcm;
     }
 
+    gf2Mat getLxMat() {
+        return *this->lX->pcm;
+    }
+
+    gf2Mat getLzMat() {
+        return *this->lZ->pcm;
+    }
+
     void setHx(std::vector<std::vector<bool>>& hx) {
         hX = std::make_unique<ParityCheckMatrix>(hx);
     }
@@ -142,6 +153,15 @@ public:
     void setHz(std::vector<std::vector<bool>>& hz) {
         hZ = std::make_unique<ParityCheckMatrix>(hz);
     }
+
+    void setLx(const std::string& pathToLx) {
+        lX = std::make_unique<ParityCheckMatrix>(pathToLx);
+    }
+
+    void setLz(const std::string& pathToLz) {
+        lZ = std::make_unique<ParityCheckMatrix>(pathToLz);
+    }
+
     /*
      * Takes matrix hZ over GF(2) and constructs respective code for X errors with Z checks represented by hZ
      * Convention: Rows in first dim, columns in second

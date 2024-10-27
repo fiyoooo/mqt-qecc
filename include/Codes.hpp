@@ -152,6 +152,8 @@ public:
         k = 12;
         n = 72;
         d = 6;
+        setLx("./resources/codes/bbCodes/bb_(,)_[[72,12,6]]_lx.txt");
+        setLz("./resources/codes/bbCodes/bb_(,)_[[72,12,6]]_lz.txt");
     }
 };
 
@@ -162,6 +164,8 @@ public:
         k = 8;
         n = 90;
         d = 10;
+        setLx("./resources/codes/bbCodes/bb_(,)_[[90,8,10]]_lx.txt");
+        setLz("./resources/codes/bbCodes/bb_(,)_[[90,8,10]]_lz.txt");
     }
 };
 
@@ -172,6 +176,8 @@ public:
         k = 12;
         n = 144;
         d = 12;
+        setLx("./resources/codes/bbCodes/bb_(,)_[[144,12,12]]_lx.txt");
+        setLz("./resources/codes/bbCodes/bb_(,)_[[144,12,12]]_lz.txt");
     }
 };
 
@@ -182,5 +188,7 @@ public:
         k = 12;
         n = 288;
         d = 18;
+        setLx("./resources/codes/bbCodes/bb_(,)_[[288,12,18]]_lx.txt");
+        setLz("./resources/codes/bbCodes/bb_(,)_[[288,12,18]]_lz.txt");
     }
 };
