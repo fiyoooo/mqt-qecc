@@ -131,19 +131,35 @@ public:
     }
 
     gf2Mat getHxMat() {
-        return *this->hX->pcm;
+        if (this->hX && this->hX->pcm) {
+            return *this->hX->pcm;
+        } else {
+            throw std::runtime_error("Attempted to access nullptr in hX.");
+        }
     }
 
     gf2Mat getHzMat() {
-        return *this->hZ->pcm;
+        if (this->hZ && this->hZ->pcm) {
+            return *this->hZ->pcm;
+        } else {
+            throw std::runtime_error("Attempted to access nullptr in hZ.");
+        }
     }
 
     gf2Mat getLxMat() {
-        return *this->lX->pcm;
+        if (this->lX && this->lX->pcm) {
+            return *this->lX->pcm;
+        } else {
+            throw std::runtime_error("Attempted to access nullptr in lX.");
+        }
     }
 
     gf2Mat getLzMat() {
-        return *this->lZ->pcm;
+        if (this->lZ && this->lZ->pcm) {
+            return *this->lZ->pcm;
+        } else {
+            throw std::runtime_error("Attempted to access nullptr in lZ.");
+        }
     }
 
     void setHx(std::vector<std::vector<bool>>& hx) {
