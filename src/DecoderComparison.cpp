@@ -8,6 +8,7 @@
 #include "union_find.hpp"
 
 #include <chrono>
+#include <functional>
 #include <random>
 
 std::tuple<std::vector<gf2Vec>, std::vector<double>>
@@ -68,14 +69,20 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
     std::vector<int>    failures(numDecoders);
     std::vector<double> totalRuntimes(numDecoders);
 
-    std::vector<int> bitErrorCounts(4); // count 0-bit, 1-bit, 2-bit, and 3+ bit errors
+    std::vector<int> bitErrorCounts(4); // count 0-bit, 1-bit, 2-bit, and 3+ bit errors, TODO maybe delete
 
     size_t const size = code.getN();
 
     // test & track the failures
-    int const minErrors = 700; // minimal number of non-zero errors
-    int       i;
-    for (i = 0; (i < numRounds) || (i - bitErrorCounts[0] < minErrors); ++i) {
+    int const minFailures = 100; // minimal number of failures
+    failures[1]           = !maxsat ? minFailures : failures[1];
+    failures[5]           = !peel ? minFailures : failures[5];
+    int i;
+    for (i = 0; (i < numRounds) || (*std::min_element(failures.begin(), failures.end()) < minFailures); ++i) {
+        for (const auto& failure : failures) {
+            std::cout << failure << "  ";
+        }
+        std::cout << '\n';
         gf2Vec const err   = generateRandomBitFlipError(size, prob);
         gf2Vec const syndr = code.getXSyndrome(err);
 
@@ -88,7 +95,7 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
         }
 
         // run all decoders
-        auto [estims, runtimes] = runDecoders(syndr);
+        auto [estims, runtimes] = runDecoders(syndr); // TODO add that if decoders throws exception, it also counts as failure
         for (size_t j = 0; j < numDecoders; ++j) {
             totalRuntimes[j] += runtimes[j];
             if ((j != 1 || maxsat) && (j != 5 || peel) && !isCorrectable(err, estims[j])) {
@@ -137,11 +144,30 @@ DecoderComparisonHelper::testWithErrorRate(double prob, int numRounds, bool verb
 }
 
 bool DecoderComparisonHelper::isCorrectable(gf2Vec const& error, gf2Vec const& estimation) {
+    // get residual
     gf2Vec residualErr(error.size());
-    for (size_t i = 0; i < error.size(); i++) {
-        residualErr.at(i) = (error[i] != estimation[i]);
+    std::transform(error.begin(), error.end(), estimation.begin(), residualErr.begin(),
+                   std::not_equal_to<>());
+
+    try {
+        // multiply with logical
+        auto   lz = code.getLzMat();
+        gf2Vec result(lz.size());
+        Utils::rectMatrixMultiply(lz, residualErr, result);
+
+        // if results in zero vector
+        if (std::all_of(result.begin(), result.end(), [](bool v) { return !v; })) {
+            // TODO save min_logical here
+            // int residualWeight = std::count(residualErr.begin(), residualErr.end(), true);
+            // if (residualWeight < min_logical) { min_logical = residualWeight; }
+            return true;
+        }
+    } catch (const std::exception& e) {
+        // in case no logical matrix was given
+        // TODO give some signal or output
     }
-    return Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr);
+    bool const backupCheck = Utils::isVectorInRowspace(*code.gethZ()->pcm, residualErr);
+    return backupCheck;
 }
 
 gf2Vec DecoderComparisonHelper::generateRandomBitFlipError(size_t size, double prob) {
