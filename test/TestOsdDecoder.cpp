@@ -3,6 +3,8 @@
 #include "ldpc/osd.hpp"
 #include "ldpc/gf2codes.hpp"
 
+#include "DecoderComparison.hpp"
+
 using namespace std;
 
 TEST(OsdDecoder, rep_code_test1){
@@ -35,7 +37,7 @@ TEST(OsdDecoder, ring_code_test1){
 
 TEST(OsdDecoder, PrintsCorrectly) {
     auto pcm = ldpc::bp::BpSparse(4, 4);
-    
+
     for(int i = 0; i<4; i++) pcm.insert_entry(i, i);
     pcm.insert_entry(1, 0);
     pcm.insert_entry(2, 0);
@@ -215,6 +217,54 @@ TEST(OsdDecoder, DecodeHammingCode) {
     delete osdD;
 }
 
+
+void printPcmH(ldpc::bp::BpSparse& pcm) {
+    for (int j = 0; j < pcm.m; j++) {
+        for (int i = 0; i < pcm.n; i++) {
+            // if no entry in that position of matrix
+            if (pcm.get_entry(j, i).at_end()) {
+                std::cout << "0";
+            } else {
+                std::cout << "1";
+            }
+        }
+        std::cout << '\n';
+    }
+}
+
+TEST(OsdDecoder, OsdComparison) {
+    auto pcm = ldpc::bp::BpSparse(3, 7);
+    // set up the Hamming parity check matrix
+    pcm.insert_entry(0, 3);
+    pcm.insert_entry(0, 4);
+    pcm.insert_entry(0, 5);
+    pcm.insert_entry(0, 6);
+    pcm.insert_entry(1, 1);
+    pcm.insert_entry(1, 2);
+    pcm.insert_entry(1, 5);
+    pcm.insert_entry(1, 6);
+    pcm.insert_entry(2, 0);
+    pcm.insert_entry(2, 2);
+    pcm.insert_entry(2, 4);
+    pcm.insert_entry(2, 6);
+
+    printPcmH(pcm);
+
+    gf2Mat gf2Pcm = Code::toGf2Mat(pcm);
+    Code   code(gf2Pcm);
+    std::cout << "Code: " << '\n'
+              << code << '\n';
+
+    gf2Vec const err   = gf2Vec{0, 1, 0, 1, 0, 1, 1};
+    gf2Vec const syndr = code.getXSyndrome(err);
+
+    DecoderComparisonHelper dch = DecoderComparisonHelper(code);
+    auto [estims, runtimes]     = dch.testWithError(err);
+    std::cout << "Estimation: ";
+    Utils::printGF2vector(estims[2]);
+
+    dch.isCorrectable(err, estims[2]);
+}
 
 
 int main(int argc, char **argv)
