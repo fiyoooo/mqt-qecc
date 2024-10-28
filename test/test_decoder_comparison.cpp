@@ -75,8 +75,8 @@ TEST_P(RandomErrorDecoderComparison, ToricCode8Test) {
 class DecoderErrorRateTest : public ::testing::TestWithParam<std::reference_wrapper<Code>> {
 protected:
     std::vector<std::string> decoders           = {"UF", "MaxSAT", "BP", "OSD", "LSD", "UF-peel", "UF-matrix", "UF-maxSAT"};
-    std::vector<double>      errorProbabilities = {0.001, 0.005, 0.01, 0.02, 0.03, 0.04, 0.05,
-                                                   0.06, 0.07, 0.08, 0.09, 0.1};
+    std::vector<double>      errorProbabilitiesSmall = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01};
+    std::vector<double>      errorProbabilities = {0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.1};
     int                      numRounds          = 1000;
     bool                     maxsat             = true; // whether to use the maxsat decoder
     bool                     peel               = true; // whether to use the peel decoder
@@ -107,13 +107,14 @@ protected:
         }
     }
 
-    void storeResultsAsJson(const std::string& codeParams) {
+    void storeResultsAsJson(size_t distance, const std::string& codeParams) {
         for (size_t i = 0; i < decoders.size(); ++i) {
             json results = json::array();
 
             for (size_t j = 0; j < errorProbabilities.size(); ++j) {
                 json entry;
                 entry["code"]                   = codeParams;
+                entry["d"]                      = distance;
                 entry["p"]                      = errorProbabilities[j];
                 entry["logical_error_rates"]    = errorRates[i][j];
                 entry["logical_error_rate_ebs"] = sqrt((1 - errorRates[i][j]) * errorRates[i][j] / realNumRounds[j]); // error bars
@@ -167,30 +168,30 @@ ToricXCode18 toricX18;
 ToricXCode32 toricX32;
 
 // even toric codes
-ToricCode8  toric8;
-ToricCode32 toric32;
-ToricCode72 toric72;
+ToricCode8   toric8;
+ToricCode32  toric32;
+ToricCode72  toric72;
 ToricCode128 toric128;
 ToricCode200 toric200;
 
 // odd toric codes
-ToricCode18 toric18;
-ToricCode50 toric50;
-ToricCode98 toric98;
+ToricCode18  toric18;
+ToricCode50  toric50;
+ToricCode98  toric98;
 ToricCode162 toric162;
 
 // ldpc codes
 BivarBikeCode72  bb72; // pure maxSAT throws error, TODO investigate
 BivarBikeCode90  bb90;
 BivarBikeCode144 bb144; // pure maxsat runs too long
-BivarBikeCode288 bb288; // pure maxsat runs too long
+BivarBikeCode288 bb288; // runs too long in general
 
 INSTANTIATE_TEST_SUITE_P(ToricAndBBCodes, DecoderErrorRateTest,
                          ::testing::Values(
                                  // std::ref(toricX8), std::ref(toricX18), std::ref(toricX32)
                                  // std::ref(toric8), std::ref(toric32) //, std::ref(toric72), std::ref(toric128), std::ref(toric200)
-                                 std::ref(toric18), std::ref(toric50), std::ref(toric98), std::ref(toric162)
-                                 // std::ref(bb72), std::ref(bb90) //, std::ref(bb144) //, std::ref(bb288)
+                                 std::ref(toric50), std::ref(toric98), std::ref(toric162)
+                                 //std::ref(bb72), std::ref(bb90), std::ref(bb144)//, std::ref(bb288)
                                  ));
 
 TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
@@ -199,6 +200,6 @@ TEST_P(DecoderErrorRateTest, RunErrorProbabilityTest) {
     peel       = false; // set to false if not usable
     runTestForDecoders(code);
     std::string const codeParams = "[[" + std::to_string(code.n) + "," + std::to_string(code.k) + "," + std::to_string(code.d) + "]]";
-    storeResultsAsJson(codeParams);
+    storeResultsAsJson(code.d, codeParams);
     printResults();
 }
