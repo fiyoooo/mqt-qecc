@@ -18,7 +18,7 @@
 class DecoderComparisonHelper {
 public:
     DecoderComparisonHelper(Code& code, bool useMaxSATDecoder = false, bool usePeelDecoder = false)
-        : code(code), pcm(code.toBpSparse()), maxsat(useMaxSATDecoder), peel(usePeelDecoder) {}
+        : code(code), pcm(code.hZToBpSparse()), maxsat(useMaxSATDecoder), peel(usePeelDecoder) {}
 
     /**
      * Tests all decoders with a given error.

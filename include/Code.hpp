@@ -379,8 +379,21 @@ public:
         return this->to_json().dump(2U);
     }
 
-    // TODO only for hz, make general
-    ldpc::bp::BpSparse toBpSparse() {
+    ldpc::bp::BpSparse hXToBpSparse() {
+        auto&              pcm = this->hX->pcm;
+        ldpc::bp::BpSparse result(pcm->size(), pcm->front().size());
+        for (int i = 0; i < result.m; ++i) {
+            gf2Vec& row = pcm->operator[](i);
+            for (int j = 0; j < row.size(); ++j) {
+                if (row[j]) {
+                    result.insert_entry(i, j);
+                }
+            }
+        }
+        return result;
+    }
+
+    ldpc::bp::BpSparse hZToBpSparse() {
         auto&              pcm = this->hZ->pcm;
         ldpc::bp::BpSparse result(pcm->size(), pcm->front().size());
         for (int i = 0; i < result.m; ++i) {

@@ -128,7 +128,7 @@ TEST_P(MatrixTranslationTest, CompareMatrices) {
     Code& code = GetParam();
     std::cout << "Code: " << '\n'
               << code << '\n';
-    auto pcm = code.toBpSparse();
+    auto pcm = code.hZToBpSparse();
     printPcm(pcm);
 
     EXPECT_TRUE(code.getHzMat() == Code::toGf2Mat(pcm));
